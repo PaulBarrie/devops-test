@@ -1,0 +1,14 @@
+mongo:
+    host: MONGO_HOST
+    port: MONGO_PORT
+    user: MONGO_USER
+    pass: MONGO_PASSWORD 
+    db: MONGO_DB
+    authdb: MONGO_AUTHDB
+
+upload:
+    tmp_path: UPLOADER_TMP_PATH
+    storage_path: UPLOADER_STORAGE_PATH
+
+session:
+    secret: UPLOADER_SESSION_SECRET 

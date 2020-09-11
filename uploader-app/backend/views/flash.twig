@@ -1,0 +1,18 @@
+{% if messages|length > 0 %}
+<div class="row">
+    <div class="col-xl">
+{%   for type,msgs in messages %}
+{%     if msgs|length > 0 %}
+{%       for message in msgs %}
+        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+{%       endfor %}
+{%     endif %}
+{%   endfor %}
+    </div>
+</div>
+{% endif %}

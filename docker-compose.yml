@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  node-app:
+    build: uploader-app
+    container_name: node-app
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongodb
+    healthcheck:
+      test: curl -sS http://localhost:3000 || exit 1
+      interval: 6s
+      timeout: 4s
+      retries: 2
+  mongodb:
+    container_name: mongodb
+    image: mongo:4.4.0
+    ports:
+        - '27017:27017'
+    volumes:
+      - ./data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=database

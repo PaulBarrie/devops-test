@@ -1,0 +1,26 @@
+{% extends 'layout.twig' %}
+
+{% block pagehead %}
+<h1>{{title}}</h1>
+<p>Upload your files</p>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-xl mt-3 mb-3">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Select files to send</label>
+                <input type="file" id="files" class="form-control-file" name="files" multiple>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl mt-3 mb-3">
+{%   include 'filelist.twig' %} 
+    </div>
+</div>
+{% endblock %}

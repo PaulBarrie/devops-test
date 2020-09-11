@@ -1,0 +1,23 @@
+# mongoDB connection parameters
+mongo:
+    host: host
+    port: 27017
+    user: xxxx
+    pass: xxxx
+    # database name
+    db: uploader
+    # optional authentication database 
+    authdb: authdb
+
+# uploaded files storage path
+# can be absolute or relative to node process working directory
+upload:
+    # temporary uploads directory
+    tmp_path: /tmp/uploader
+    # final storage directory
+    storage_path: uploaded
+
+# cookie session configuration
+session:
+    # secret : must be changed
+    secret: Lk2z9J77LqMfLQI88d7UVVyga/0

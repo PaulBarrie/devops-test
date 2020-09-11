@@ -1,0 +1,22 @@
+{% if files is defined and files|length > 0 %} 
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Filename</th>
+      <th scope="col">MIME Type</th>
+      <th scope="col">Size (bytes)</th>
+    </tr>
+  </thead>
+  <tbody>
+{%   for f in files %}
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td><a href="/download/{{ f.uuid }}/{{ f.originalname }}">{{ f.originalname }}</a></td>
+      <td>{{ f.mimetype }}</td>
+      <td>{{ f.size }}</td>
+    </tr>
+{%   endfor %}
+  </tbody>
+</table>
+{% endif %}
