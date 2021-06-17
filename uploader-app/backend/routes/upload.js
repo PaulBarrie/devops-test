@@ -14,17 +14,12 @@ var UploadedFile = require('../model').UploadedFile;
 var saveFile = function (file, dest) {
     return new Promise(function(resolve, reject) {
         var uuid = uuidv1();
-        var newpath = path.join(dest, uuid + '_' + file.originalname);
-        fs.rename(file.path, newpath, function (err) {
-            if (err) {
-              return reject (err);
-            }
-            
+        var newpath = path.join(dest, uuid);
+        fs.copyFile(file.path, newpath, function (err) {
+            if (err) throw err;
             fs.stat(newpath, function (err, stats) {
-                if (err) {
-                  return reject (err);
-                }
-                
+                if (err) throw err;
+
                 var newFile = UploadedFile({
                     uuid: uuid,
                     originalname: file.originalname,
@@ -32,15 +27,13 @@ var saveFile = function (file, dest) {
                     mimetype: file.mimetype,
                     size: file.size
                 });
-                
+
                 newFile.save(function (err, newuploaded, numAffected) {
-                  if (err) {
-                    return reject (err);
-                  }
-                  
+                  if (err) throw err;
+
                   resolve(numAffected);
                 });
-                
+
             });
         });
     });
@@ -54,7 +47,7 @@ router.get('/', function(req, res, next) {
         }
         
         res.render('upload', { 
-            title: 'Uploader' , 
+            title: 'Le musée des horreurs' , 
             messages: req.flash(),
             files: files
         });        

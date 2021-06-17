@@ -5,3 +5,11 @@ logfile.txt
 *DS_Store
 .cache
 .coverage
+.editorconfig
+.gitignore
+LICENSE
+README.md
+node_modules/
+Dockerfile
+helm
+kube

@@ -2,35 +2,42 @@
 
 var config = require('config')
 var mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+const userMongo = process.env.MONGO_INITDB_ROOT_USERNAME;
+const authMongo = process.env.AUTH_PART_MONGO;
+const passMongo = process.env.MONGO_INITDB_ROOT_PASSWORD;
+const dbMongo = process.env.MONGO_INITDB_DATABASE;
+const host = (process.env.MONGO_HOST != null) ? process.env.MONGO_HOST : config.mongo.host;
 
 var createMongoUri = function(config) {
     var uri = '',
         authPart = '';
 
     // Get authentication database part
-    if (config.hasOwnProperty('authdb') && config.authdb) {
-        authPart = `?authSource=${config.authdb}`;
+    if (authMongo != "") {
+        authPart = `?authSource=${authMongo}`;
     }
 
-    uri += `mongodb://${config.host}:${config.port}/${config.db}${authPart}`;
+    uri += `mongodb://${host}:${config.port}/${dbMongo}${authPart}`;
     console.log('URIIIIIIIIIIII', uri)
 
     return uri;
 };
 
 mongoose.Promise = Promise;
-var db = mongoose.connect(createMongoUri(config.mongo), {
-    useMongoClient: true, 
-    user: config.mongo.user, 
-    pass: config.mongo.pass
+mongoose.connect(createMongoUri(config.mongo), {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    user: userMongo,
+    pass: passMongo
 });
 
-db.on('error', function(error) {
-    console.error('MongoDB connection error: ' + error);
-});
-
-db.on('connected', function() {
-    console.log('connected to MongoDB');
-});
+var db = mongoose.connection;
+db
+ .once('open', () => console.log('Good to go!'))
+ .on('error', (error) => {
+ console.error('Error : ', error);
+ });
 
 module.exports = db;

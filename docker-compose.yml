@@ -2,10 +2,15 @@ version: '3'
 
 services:
   node-app:
-    build: uploader-app
+    build:
+      context: uploader-app
+      args:
+        ENV_APP: 'prod' #prod/dev
     container_name: node-app
     ports:
       - '3000:3000'
+    env_file:
+      - .env
     depends_on:
       - mongodb
     healthcheck:
@@ -13,6 +18,11 @@ services:
       interval: 6s
       timeout: 4s
       retries: 2
+    volumes:
+      - uploaded:/usr/src/app/uploaded:rw
+    networks: 
+      - app
+
   mongodb:
     container_name: mongodb
     image: mongo:4.4.0
@@ -21,6 +31,16 @@ services:
     volumes:
       - ./data:/data/db
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=user
-      - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=database
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    networks: 
+      - app
+
+networks: 
+  app:
+    driver: bridge
+
+volumes:
+  data:
+  uploaded:

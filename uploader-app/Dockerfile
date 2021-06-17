@@ -1,35 +1,47 @@
+#########################################
+# Stage 1 : Initialize the env argument #
+#########################################
+FROM node:10-slim as init
 
-FROM node:latest
+ARG ENV_APP
+ENV ENV_APP=$ENV_APP
 
-RUN mkdir -p /usr/src/app && mkdir -p /tmp/uploader && mkdir -p /usr/src/app/uploaded
-COPY . /usr/src/app
+
+################################################
+# Stage 2 : Install dependencies and build app #
+################################################
+FROM init as builder
+
+WORKDIR /yarn_installer/
+
+COPY ["webpack.config.js", "server-dev.js", "package.json", "yarn.lock", "server.js", "./"]
+COPY frontend ./frontend
+
+RUN yarn install
+RUN yarn "build-$ENV_APP"
+
+
+#####################
+# Stage 3 : Run App #
+#####################
+
+FROM init
 WORKDIR /usr/src/app
 
-RUN npm install
+RUN groupadd -g 1001 appgroup && \
+    useradd -r -u 1001 -g 1001 appuser
 
-COPY package*.json /usr/src/app
+RUN mkdir uploaded && \
+    chown 1001:1001 uploaded
 
-# #Prepare folder and add depedencies
-# RUN mkdir -p /tmp/uploader
-# COPY uploader-app/package*.json ./
-# #Add specify install for webpack
-# RUN npm install webpack -g
-# WORKDIR /tmp
-# COPY uploader-app/package.json /tmp/
-# RUN npm config set registry http://registry.npmjs.org/ && npm install
+COPY --from=builder --chown=1001:1001 yarn_installer/ ./
+COPY --chown=1001:1001 config ./config/
+COPY --chown=1001:1001 backend ./backend/
 
-# #Install rest of depedencies
-# WORKDIR /usr/src/app
-# COPY uploader-app/ /usr/src/app/
+USER appuser
 
-# RUN mkdir -p /usr/src/app/uploaded
-# RUN cp -a /tmp/node_modules /usr/src/app/
+RUN mkdir -p /tmp/uploader
 
-# #Build the app
-# RUN npm run build
 
-#Run + expose 3000 port
 EXPOSE 3000
-
-#Start
-CMD [ "npm", "run", "start" ]
+ENTRYPOINT yarn start-$ENV_APP
