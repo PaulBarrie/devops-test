@@ -1,0 +1,9 @@
+dependencies:
+- name: uploader-app
+  repository: file://subcharts/uploader-app
+  version: 0.1.0
+- name: mongo
+  repository: file://subcharts/mongo
+  version: 0.1.0
+digest: sha256:93ce9faa7f3fab555c6027be1f7ac9f4b913a245028b4ee29b90f901b6415234
+generated: "2021-06-25T15:45:02.660123205+02:00"

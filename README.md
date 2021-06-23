@@ -16,10 +16,10 @@ Quelques points de détail:
  - Utilise le Makefile afin de faciliter les commandes
 
 Livrables attendus:
-  - [ ] Ecriture du fichier docker-compose.yaml (dans le dossier uploader-app) afin de lancer l'application en local
-  - [ ] Configuration correcte de l'application node & initialisation de Mongo
-  - [ ] Utilisation d'un seul network
-  - [ ] Volume persistant pour la base
+  - [ X ] Ecriture du fichier docker-compose.yaml (dans le dossier uploader-app) afin de lancer l'application en local
+  - [ X ] Configuration correcte de l'application node & initialisation de Mongo
+  - [X ] Utilisation d'un seul network
+  - [ X] Volume persistant pour la base
   
 BONUS:
   - [ ] Résolution DNS depuis le PC hôte, ajout d'un (reverse)proxy ?
@@ -33,11 +33,11 @@ BONUS:
 Afin de préparer la mise en production, nous te proposition d'écrire les fichiers `.yaml` afin de déployer cette application dans un cluster kubernetes. Il y a peu d'incidence sur le type de cluster (AWS/Azure/GCP ou minikube). Nous demanderons seulement lors de ton entretien une démo live !
 
 Yaml à fournir:
-  - [ ] Deploiement de l'application JS
-  - [ ] Deployment/StatefulSet de la base MongoDB
-  - [ ] Création d'un volume pour la persistance de la base
-  - [ ] Les services correspondant pour l'ouverture du flux vers l'extérieur
-  - [ ] Ingress
+  - [X] Deploiement de l'application JS
+  - [X] Deployment/StatefulSet de la base MongoDB
+  - [X] Création d'un volume pour la persistance de la base
+  - [X] Les services correspondant pour l'ouverture du flux vers l'extérieur
+  - [X] Ingress
 
 BONUS:
   - [ ] TLS sur l'Ingress

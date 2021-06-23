@@ -1,0 +1,12 @@
+# Default values for helm-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  namespace: polo
+
+secrets:
+  mongo:
+    AUTH_PART_MONGO: YWRtaW4=
+    MONGO_INITDB_DATABASE: dXBsb2FkZXI=
+    MONGO_INITDB_ROOT_PASSWORD: YWljMVV5b2g0dnVhMWll
+    MONGO_INITDB_ROOT_USERNAME: cm9vdA==

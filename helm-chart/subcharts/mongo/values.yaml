@@ -1,0 +1,52 @@
+# Default values for mongo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+terminationGracePeriodSeconds: 10
+image:
+  name: mongo
+  tag: "4.4.0"
+
+resources:
+  cpu: 1
+  memory: 300Mi
+
+service:
+  type: ClusterIP
+  port: 27017
+
+volume:
+  accessMode: ReadWriteOnce
+  storageRequest: 1Gi
+  volumeMode: standard
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -11,6 +11,11 @@ WARN_COLOR=\\e[33m
 APP_NAME=paulb314/uploader-app
 APP_TAG=latest
 APP_ARG=dev
+DOCKER_IMAGE=quay.io/dreamquark/devops
+DOCKER_TAG=latest
+
+CHART_NAME=devops-chart
+CHART_FOLDER=helm-chart
 default: help;   # default target
 
 help: ## display commands help
@@ -53,3 +58,40 @@ rm: ## Start all components
 .PHONY: rm
 
 # Kubernetes
+ingress-controller: ##
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.34.1/deploy/static/provider/baremetal/deploy.yaml
+.PHONY: ingress-controller
+
+apply-kube:
+	kubectl apply -f ./kubernetes
+.PHONY: apply-kube
+
+clear-chart:
+ifeq ($(helm list | grep $(CHART_NAME)),'')
+	helm uninstall $(CHART_NAME)  
+endif
+	rm -f $(CHART_FOLDER)/charts/* devops-test-0.1.0.tgz
+.PHONY: clear-chart
+
+package-chart:
+	$(MAKE) clear-chart
+	helm package --dependency-update $(CHART_FOLDER) 
+.PHONY: package-chart
+# Helm
+install-chart: ## 
+	$(MAKE) package-chart 
+	helm install  $(CHART_NAME) $(CHART_FOLDER)
+.PHONY: install-chart
+
+helm-debug:
+	$(MAKE) clear-clear
+	$(MAKE) package-chart 
+	helm install --dry-run --debug $(CHART_NAME) $(CHART_FOLDER) > logs
+.PHONY: helm-debug
+
+template-chart: ## helm template commands
+	$(MAKE) clear-chart
+	$(MAKE) package-chart
+	helm template --debug $(CHART_NAME) devops-test-0.1.0.tgz > test.yaml
+.PHONY: template
+

@@ -2,14 +2,12 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mongo-pv
-  labels:
-    type: local
 spec:
   storageClassName: mongo-pv
   accessModes:
     - ReadWriteOnce
   capacity:
-    storage: 1Gi
+    storage: 5Gi
   hostPath:
     path: "/home/k8s-data/devops-test/mongo"
 
@@ -17,15 +15,12 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: uploads-pv
-  labels:
-    type: local
+  name: uploader-pv
 spec:
-  storageClassName: uploads-pv
+  storageClassName: uploader-pv
   accessModes:
     - ReadWriteOnce
   capacity:
     storage: 5Gi
   hostPath:
-    path: "/home/k8s-data/devops-test/uploads"
-
+    path: "/home/k8s-data/devops-test/uploader"

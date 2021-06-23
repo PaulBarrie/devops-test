@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: uploader-app
+  namespace: polo
+spec:
+  selector:
+    app: uploader-app
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
