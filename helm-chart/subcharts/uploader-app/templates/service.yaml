@@ -3,10 +3,16 @@ kind: Service
 metadata:
   name: uploader-app
   namespace: polo
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: uploader-app
   type: NodePort
+  {{- with .Values.service }}
   ports:
-  - port: 3000
-    targetPort: 3000
+  - protocol: TCP
+    port: {{ $.Values.service.port }}
+    targetPort: {{ $.Values.service.port }}
+  {{- end }}
+  

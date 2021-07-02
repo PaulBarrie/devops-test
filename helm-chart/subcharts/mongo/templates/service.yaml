@@ -3,7 +3,6 @@ kind: Service
 metadata:
   name: mongodb
   namespace: {{.Values.global.namespace}}
-
 spec:
   {{- with .Values.service}}
   type: {{.type}}

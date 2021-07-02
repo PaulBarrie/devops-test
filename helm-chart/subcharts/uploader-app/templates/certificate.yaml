@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1beta1
+kind: ManagedCertificate
+
+metadata:
+  name: uploader-certificate
+  namespace: {{.Values.global.namespace}}
+spec:
+  domains:
+    - {{ .Values.domain}}

@@ -67,7 +67,8 @@ apply-kube:
 .PHONY: apply-kube
 
 clear-chart:
-ifeq ($(helm list | grep $(CHART_NAME)),'')
+ifeq ($(helm list | grep $(CHART_NAME) | wc -l),1)
+	@echo "Remove chart"
 	helm uninstall $(CHART_NAME)  
 endif
 	rm -f $(CHART_FOLDER)/charts/* devops-test-0.1.0.tgz
