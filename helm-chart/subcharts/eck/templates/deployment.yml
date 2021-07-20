@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  labels:
+    name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: elasticsearch
+  template:
+    metadata:
+      labels:
+        name: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: elasticsearch:7.8.0
+          ports:
+          - containerPort: 9200
+            name: http
+          env:
+          - name: discovery.type
+            value: single-node
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  labels:
+    name: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kibana
+  template:
+    metadata:
+      labels:
+         name: kibana
+    spec:
+      containers:
+        - name: kibana
+           image: kibana:7.8.0
+           ports:
+             - containerPort: 5601
+               name: http
+           env:
+            - name: ELASTICSEARCH_HOSTS
+               value: http://{{ .Values.global.hostIp }}:{{ .Values.ports.elasticsearch }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  labels:
+    name: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: logstash
+  template:
+    metadata:
+      labels:
+        name: logstash
+    spec:
+      containers:
+        - name: logstash
+           image: logstash:7.8.0
+           ports:
+             - containerPort: 5044
+               name: filebeat
+           env:
+             - name: ELASTICSEARCH_HOSTS
+               value: http://{{ .Values.global.hostIp }}:{{ .Values.ports.elasticsearch }}
+           volumeMounts:
+             - name: logstash-pipeline
+               mountPath: /usr/share/logstash/pipeline/
+           command:
+             - logstash
+      volumes:
+        - name: logstash-pipeline
+           configMap:
+            name: logstash-pipeline
+            items:
+              - key: logstash.conf
+                path: logstash.conf

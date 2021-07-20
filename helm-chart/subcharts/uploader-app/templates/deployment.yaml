@@ -6,7 +6,7 @@ metadata:
   name: uploader-app
   labels:
     app: uploader
-  namespace: polo  #  {{.Values.global.namespace}}
+  namespace: {{.Values.global.namespace}}
 spec:
   replicas: 1  #  {{.Values.replicaCount}}
   selector:
@@ -42,7 +42,29 @@ spec:
         envFrom:
         - secretRef:
             name: mongo-secret
+      - name: filebeat
+         image: elastic/filebeat:7.8.0
+         env:
+         - name: LOGSTASH_HOSTS
+           value: "{{ .Values.global.hostIp }}:{{ .Values.ports.logstash }}"
+         args: [
+           "-c", "/etc/filebeat/filebeat.yml",
+           "-e"
+         ]
+         volumeMounts:
+         - name: log-output
+           mountPath: /tmp/
+         - name: beat-config
+           mountPath: /etc/filebeat/
       volumes:
       - name: uploaded
         persistentVolumeClaim:
           claimName: uploads-claim
+      - name: log-output
+         emptyDir: {}
+      - name: beat-config
+         configMap:
+           name: beat-config
+           items:
+           - key: filebeat.yml
+             path: filebeat.yml

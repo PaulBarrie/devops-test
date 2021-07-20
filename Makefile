@@ -16,6 +16,9 @@ DOCKER_TAG=latest
 
 CHART_NAME=devops-chart
 CHART_FOLDER=helm-chart
+
+DNS_SOLVER=dns01-solver
+PROJECT_ID=winged-ratio-312113
 default: help;   # default target
 
 help: ## display commands help
@@ -67,26 +70,27 @@ apply-kube:
 .PHONY: apply-kube
 
 clear-chart:
-ifeq ($(helm list | grep $(CHART_NAME) | wc -l),1)
-	@echo "Remove chart"
-	helm uninstall $(CHART_NAME)  
-endif
 	rm -f $(CHART_FOLDER)/charts/* devops-test-0.1.0.tgz
 .PHONY: clear-chart
+
+uninstall-chart:
+	$([ $(echo "$(helm uninstall $(CHART_NAME))" | grep -c $(CHART_NAME)) == 0 ] && echo "Nothing to do" || helm uninstall $(CHART_NAME))
+.PHONY: uninstall-chart
 
 package-chart:
 	$(MAKE) clear-chart
 	helm package --dependency-update $(CHART_FOLDER) 
 .PHONY: package-chart
-# Helm
+
 install-chart: ## 
-	$(MAKE) package-chart 
-	helm install  $(CHART_NAME) $(CHART_FOLDER)
+	$(MAKE) package-chart $(CHART_FOLDER)
+	helm install --atomic $(CHART_NAME) $(CHART_FOLDER)
 .PHONY: install-chart
 
 helm-debug:
-	$(MAKE) clear-clear
-	$(MAKE) package-chart 
+	$(MAKE) clear-chart
+	$(MAKE) uninstall-chart
+	$(MAKE) package-chart
 	helm install --dry-run --debug $(CHART_NAME) $(CHART_FOLDER) > logs
 .PHONY: helm-debug
 
@@ -96,3 +100,12 @@ template-chart: ## helm template commands
 	helm template --debug $(CHART_NAME) devops-test-0.1.0.tgz > test.yaml
 .PHONY: template
 
+# https://cert-manager.io/docs/configuration/acme/dns01/google/
+gcp-service-account:
+	gcloud iam service-accounts create $(DNS_SOLVER)
+.PHONY: gcp-service-account
+
+gcp-create-key-svc-account:
+	gcloud iam service-accounts keys create $(CHART_FOLDER)/subcharts/templates/uploader-app/key.json \
+   --iam-account $(DNS_SOLVER)@$(PROJECT_ID).iam.gserviceaccount.com
+.PHONY: gcp-create-key-svc-account

@@ -1,5 +1,5 @@
 NAME: devops-chart
-LAST DEPLOYED: Mon Jun 28 16:34:25 2021
+LAST DEPLOYED: Tue Jul 20 15:18:49 2021
 NAMESPACE: polo
 STATUS: pending-install
 REVISION: 1
@@ -10,6 +10,117 @@ USER-SUPPLIED VALUES:
 COMPUTED VALUES:
 global:
   namespace: polo
+  project_id: winged-ratio-312113
+logstash:
+  antiAffinity: hard
+  antiAffinityTopologyKey: kubernetes.io/hostname
+  envFrom: []
+  extraContainers: ""
+  extraEnvs: []
+  extraInitContainers: ""
+  extraPorts: []
+  extraVolumeMounts: ""
+  extraVolumes: ""
+  fullnameOverride: ""
+  global:
+    namespace: polo
+    project_id: winged-ratio-312113
+  hostAliases: []
+  httpPort: 9600
+  image: docker.elastic.co/logstash/logstash
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  imageTag: 8.0.0-SNAPSHOT
+  ingress:
+    enabled: false
+  labels: {}
+  lifecycle: {}
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 300
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  logstashConfig: {}
+  logstashJavaOpts: -Xmx1g -Xms1g
+  logstashPattern: {}
+  logstashPatternDir: /usr/share/logstash/patterns/
+  logstashPipeline: {}
+  maxUnavailable: 1
+  nameOverride: ""
+  nodeAffinity: {}
+  nodeSelector: {}
+  persistence:
+    annotations: {}
+    enabled: false
+  podAffinity: {}
+  podAnnotations: {}
+  podManagementPolicy: Parallel
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  podSecurityPolicy:
+    create: false
+    name: ""
+    spec:
+      fsGroup:
+        rule: RunAsAny
+      privileged: false
+      runAsUser:
+        rule: RunAsAny
+      seLinux:
+        rule: RunAsAny
+      supplementalGroups:
+        rule: RunAsAny
+      volumes:
+      - secret
+      - configMap
+      - persistentVolumeClaim
+  priorityClassName: ""
+  rbac:
+    annotations: {}
+    create: false
+    serviceAccountAnnotations: {}
+    serviceAccountName: ""
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    successThreshold: 3
+    timeoutSeconds: 5
+  replicas: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: 1536Mi
+    requests:
+      cpu: "1"
+      memory: 1536Mi
+  schedulerName: ""
+  secretMounts: []
+  secrets: []
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    runAsNonRoot: true
+    runAsUser: 1000
+  service: {}
+  terminationGracePeriod: 120
+  tolerations: []
+  updateStrategy: RollingUpdate
+  volumeClaimTemplate:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
 mongo:
   affinity: {}
   autoscaling:
@@ -19,6 +130,7 @@ mongo:
     targetCPUUtilizationPercentage: 80
   global:
     namespace: polo
+    project_id: winged-ratio-312113
   image:
     name: mongo
     tag: 4.4.0
@@ -59,8 +171,10 @@ uploader-app:
     maxReplicas: 100
     minReplicas: 1
     targetCPUUtilizationPercentage: 80
+  domain: quelle-indignite.com
   global:
     namespace: polo
+    project_id: winged-ratio-312113
   image:
     name: uploader-app
     registry: paulb314
@@ -69,6 +183,7 @@ uploader-app:
     annotations: {}
     className: ""
     enabled: false
+    global_static_ip_name: uploader-ip
     hosts:
     - host: uploader-app.polo.localhost
       paths:
@@ -335,6 +450,7 @@ uploader-app:
     dhParam: null
     global:
       namespace: polo
+      project_id: winged-ratio-312113
     imagePullSecrets: []
     podSecurityPolicy:
       enabled: false
@@ -353,13 +469,10 @@ uploader-app:
   resources:
     cpu: 0.5
     memory: 300Mi
-  secrets:
-    tls:
-      tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZMVENDQXhXZ0F3SUJBZ0lVS0p2Q2lQNnQwMUJRQnAwQ0ZTa2FuNWVzTGVFd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0pqRWtNQ0lHQTFVRUF3d2JkWEJzYjJGa1pYSXRZWEJ3TG5CdmJHOHViRzlqWVd4b2IzTjBNQjRYRFRJeApNRFl5TkRBNU16Z3dNMW9YRFRJeU1EWXlOREE1TXpnd00xb3dKakVrTUNJR0ExVUVBd3diZFhCc2IyRmtaWEl0CllYQndMbkJ2Ykc4dWJHOWpZV3hvYjNOME1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0MKQWdFQTJjMXdQY3dHSjlnTkY4NXRsaDNOVXYxUDBabE9QNW5MNDlpRGxrNDEvNWZwODFYWk9ySmkwcmhPT0FpaQo2MU1ZYjdNOERnRi9lNmlyZk9COTRuU3JWS004TitkZzN3TU12RUlRWmpuQktXNEk3a2Jra2IvSjgrUTRoYklFCjJjZ0ZjOWVLTDJzNGNzZkpGNVY4VW0xenV2U1hBMTFXenZxSUc4UGtUZDZ0dkU1S2VWWEhURWl6dVg4Vlk0RDQKaWxOaWJHSVZoOFZHaEV2Smd5N3Y1ZVMwb0dIbE9MUGJKT0xVMndlK3NCUmp4OHlWcU40V0d1SWR4QzFja0p1NApNMU4ycFZoMjI1a1F0Z2RZYUY1ejUwNWpJU1dUU2NsSnYweDltMHZQN25OeEllTkNydlNoU2VMdGY3ZlpCcC82Cmp4K1kyT3VaS2VVUERKY2oxWGFsUXJNSmk2SmlGQzhBUnV5WG9zUmRqZ3lWSVRDVUNGVFNHVE5sNTJ2R1hJZGUKM1RCS001UitQKzd6bGpNWllWOUtMMkZtMWpIa2tUd1lQdW5CaUhZYjhHYTVybUsrMnE1c2JpcFBUZTVUczFwYwpPbUlzR3RSUXNFSFM0QlVRODVMdUI0WnBIUmVMbTdYb3hHZVJaT2RudW1jNTdtUDY3ZWJXWG1JMjVHMVh1am1iCkpYUkdQTHVZcEJLU083NCtNMWFsVFozWHNmT2Jna2RaN0MrZTJjVXBqNmEwRnhVbElrWm02aEEzdlNlZHR4LzUKTmMxM043MGRhcStCcGFWSHpaOWlOMGVnbGZuaXczMk1MRkxoT3JwbWR4bTlMMWRMenZuMlNwUmxHWlR2VmxzRwpBZmx6Szk2bTd0cDRuNXgxZ0w3VnVWS0VkWGF1cTR2N2JhSUs3VCtJNFlxem9MTUNBd0VBQWFOVE1GRXdIUVlEClZSME9CQllFRkhLZU5lRzV6TDdtZVJLOXZ5cjB6a3R6Mkh1c01COEdBMVVkSXdRWU1CYUFGSEtlTmVHNXpMN20KZVJLOXZ5cjB6a3R6Mkh1c01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dJQgpBSm1teHZKaTU2TTE0N0pMSWJ6WEl3eEp0bHJ4WDJ6cFJUTEdXN3lXdnNPMHFIR1AyczU3eWNkcm8wUEdVbWk3CjBhTU5Ub05nZXBZdHAvY3BadXNhbnZnWUxSeGk3OW9LbVlEajNXTURQOThwV3BmV1pVWG9TaXlsNXRRSWNXRnUKQ2F1ZnVwbUYvR3loS1hGdGlHQWZNV0ZsUlY0ZloyNnA5NFNOUVJMTEFLWThJU3RjeHdSeXhiMU91M0ZHT21ZbApRRzRMcVRxd1hwTWFhUHRuRkJhL0EvakFoT1lwNjM1Mkd6a1VPcHAyTTBpWVlZUm8zVXFLZUpIOTFjODZmZFBlCjQzUEp5cjNpSVFJaW9kRTVnaGhmaVV4a3ZDNWZsVnIvZXNBQ2JGMURSSkJoMHh6eGplQkg0bzdRNWZrSUJaeVQKK21uc3R5enp3NURpQ1FWSVJ2dkNYdysrcG4zbEExUis5NFhmbW1JMFZCcThtMmxmbUxqT1RydUVCUjBUL2lRTgpWM00zc3dxTUFGYVRLRnFpQi8zZXo5MEk5YUpleWNUdlFIK2VGQ2l1emdMenhjWll5MDhrSkMydC9qVVBmQ0xwCjZHTG9RSDlRNFM5dmJGSHJHaUxiYUd4bStDYzcxckpUQWJjVDFNVFdMSUdjc0xXQ05OTmJlZVlvS25yaGdkNDkKaXBvZjVlQlVFeEtBUHFmVzE5VVYvVmRXWFZwa2FWMnpEeFhwZzRxbHNlZjErak1jbGZGbVhOaXB4aEwvWG9wVgpwNm9Leklra1MvdnhjbUZLYlMvaGJ2Qzd3Y25UWmlvZ2dHRHUrT3o4Nk1qM3FCNXhCMTZsZVVmZGdPQVlORTdlCmQ5SklLNmpUYWs0bjV4ODZaZjkrQlRCNEcvdHBaZzRZaVN3Z0s4S2JOTlgzCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-      tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUpRZ0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQ1N3d2dna29BZ0VBQW9JQ0FRRFp6WEE5ekFZbjJBMFgKem0yV0hjMVMvVS9SbVU0L21jdmoySU9XVGpYL2wrbnpWZGs2c21MU3VFNDRDS0xyVXhodnN6d09BWDk3cUt0OAo0SDNpZEt0VW96dzM1MkRmQXd5OFFoQm1PY0VwYmdqdVJ1U1J2OG56NURpRnNnVFp5QVZ6MTRvdmF6aHl4OGtYCmxYeFNiWE82OUpjRFhWYk8rb2didytSTjNxMjhUa3A1VmNkTVNMTzVmeFZqZ1BpS1UySnNZaFdIeFVhRVM4bUQKTHUvbDVMU2dZZVU0czlzazR0VGJCNzZ3RkdQSHpKV28zaFlhNGgzRUxWeVFtN2d6VTNhbFdIYmJtUkMyQjFobwpYblBuVG1NaEpaTkp5VW0vVEgyYlM4L3VjM0VoNDBLdTlLRko0dTEvdDlrR24vcVBINWpZNjVrcDVROE1seVBWCmRxVkNzd21Mb21JVUx3Qkc3SmVpeEYyT0RKVWhNSlFJVk5JWk0yWG5hOFpjaDE3ZE1Fb3psSDQvN3ZPV014bGgKWDBvdllXYldNZVNSUEJnKzZjR0lkaHZ3WnJtdVlyN2FybXh1S2s5TjdsT3pXbHc2WWl3YTFGQ3dRZExnRlJEegprdTRIaG1rZEY0dWJ0ZWpFWjVGazUyZTZaem51WS9ydDV0WmVZamJrYlZlNk9ac2xkRVk4dTVpa0VwSTd2ajR6ClZxVk5uZGV4ODV1Q1IxbnNMNTdaeFNtUHByUVhGU1VpUm1icUVEZTlKNTIzSC9rMXpYYzN2UjFxcjRHbHBVZk4KbjJJM1I2Q1YrZUxEZll3c1V1RTZ1bVozR2IwdlYwdk8rZlpLbEdVWmxPOVdXd1lCK1hNcjNxYnUybmlmbkhXQQp2dFc1VW9SMWRxNnJpL3R0b2dydFA0amhpck9nc3dJREFRQUJBb0lDQUdYSm9QOEFicEFJWkhZUHZ4ODg1a3cyCm5pcnlYcU5TbVBydW9QQ0p0S3F5c0Y5TWE2MEcyVEJwZWdTdDVKWGR5N25JSmZUVnRtSndQVlNyQmFuanBINTEKbXhyMVEweDEvR211NWtNZ0VxbnVCclowNHpWS1VITnU0UXQ2V3RIOHJLK3F0Nlhaa2hQeVVvUjNGQmJobUFoegpibS9nRzBXM3lBeFJ6RXlvR01HOFJRblhrTUNSNll4elcrZVl5bzY2MFhDZGxqcFJjOWM0SkFEdTJxYXg3OGhVCmQrKzcvbHFLdDdkMU15VFBJcUtwZGZmcGNxTTFzWHVSUjRVOWdTUmJpVU5VeUpkd1BXTVVvN2lEQzkrNXZwSXIKSVY2R2Q3U3packJCQ2ZnQ2M0akcwTTg2L0hXdlhCY29NSURzR3dqd1YxcHBJTGQzbVVUbERaWWhVTEtQUVpIbgpjdnV0ZzRrYTdpcmwwTFp6Zk9uc3dhWkNMNFZ3b1ZuVEVoSFVKL1M0eTRYUU1hMUVVekVJVVBJOEh0RWY0NVhuCnhKY3ZGQ1lqUS8xUDBlRTM0N0tWZ0hNblNPeWJaOHdjTjAxVHljSDk4NWovdEt0QlpySGVqWnY1WW93bDNCYlEKdCtFQXU5Qm95dVFYaHZRZGRUWUtSMjJ1TlZ3bnhDTVE3VTNnM3pIRTNzNStDbC85V0JTS0FzZjhuaTZjMXlEbwp2aXU2UW5VTXgwZ0V2eDIxQ0tYekV0WXAvYy9sM3lMcVVRQ2FBVlRNdzhhampCTFB0YUxtY3Qxc1FnUkxhZnQrCk9WYmJLMk5IaHRxS05HWU9KdTdEKzA5RzZTSUpVODVRL0o0UUcxSzFBYVhNNTVxRjR5NkFqUUVCQVlUeWx4a2oKSysrV01PeUlKaTE3YUwrVlo0RUJBb0lCQVFEMm1vUnc0bEJZNlBscFpWWS9jQUpVWXRDMndRRExzTVhDcUVNdwpSNVRwN2NlNFhSS0VNMFZVODRYbmdGOXdKTDcyQjREWFFBMW8zc2hXcDJHMXZ4c01GenNTajIyNW5uTVZWc3dJCktVeWFVWVlRQjFoQlE3cUl3WWJCelZGN3Y1OTRFN1RpR1R6QjZUTHloWWhIUUZLQ0hDbVI0WkxjbWJwMHA4cVAKQzBIejl6enFJVEhCS3ZKSEFBVmFzVlU3d2MyRmltdzRNaSsrdjlLWFByWW83Y3d5aW1EUGtpVERiaUpOV0dEYwppY1BxMkt4aEhYWmErRkl6T2xUV1Z3OVVYaWowNi9Vb29IZEZkVlA4UjFYVm5zYVJjK2ZncFpkc3JqczB6NUJPCm5aTWVZdnljMG5GbGVyY2UxeGF6QTVIRTFjTFd4cVJWcUNGYkR2R0xlVmliTWtSVEFvSUJBUURpR2Z0MkNvUTIKdmtzS0tnZ1hFbHBCNW9CdjJNdm9lRXVtUnRBOGJmZkxVdWVJV1lBbDZHeTQwZEZVSTdSV1VsTU5QSVo3MGFGWAo0T2drOGZVbWJFTVdraWRaMU9EWHcwZmZ2eEo5eFRnQllTalpiNW11ZjBXWnNDQi9LVXBxZXZxb1JiUWpHNlgzClZ6N082VURWQ2lFVjRXQUVqb2tscUU2YkNYc2g2Um02ei9VY3lQQzdkQzB5Y1VoZVF6OVdUV2tnNEdjeTJBbFkKSUs5SVZrakJzUkllRTNrOXNZeXFrNUhoWEFPT3JZcHcrV05ZWGNoTTE4NVFFY2txcklqbE1zbkRGOXpXYkZhMgpWOHBoMnFmeXU4WGNVNlZxd1hhRkM0Ny9jWWJBdkljeFNQOStLbXM1S2tWbmpvM0ZEZnZyLzNFY0NTdk4xM0FLCnlBd2pyU1lPQ2FZaEFvSUJBUUNycmF6UVRhMzBCOVZDKzZxTXBYVHB2SlZpOVlDUlRiS1Byc1ovd1FXNXliRUYKOTcyaFRYUlNET3RHM0ljVXNuQkRKYndibmxyM2pFbGFrbEtpemJXTnVFcUd4RlYyS1FvamEvYkZJOE5SbDduRwpST2E3SU9TbXVsd1BaZG41VmRFMkxqbjZRZW1iY2JiblFmRTY4VnUvZXMyeDRxRjBkSTFyRXprZ1ZvMEd4RE9qCko1TFUwUW8wUlo1MG9nb2RmUEdRcTJwbHdRS2VRRHJpMG1UTW42aE44eW9zdDZoaWFiVDF0YlpSTXBPelZqN0QKcVZneFFya3ZNc2ZISkhybW1GclpENy93RmE2VEszaFpwR3ZzT1FveVRzZTZERzRiMmp3YnF2amkwaTZPdEFqNwpRRUp6akhnWnYxSHROR254NTRNcU5NWkpYN0JCRFdrNVdUUkhienBEQW9JQkFEblRQVTJXS1BRN1BNUFB0aHY0CmRKN3dEWjhOU2pFZE92TytucGtsNHI3Y2FCeW1EekVpdlZPVFRiOEFGcW9SQ2U2VHNTMVBrcnovNXo4enBtZjYKUGpveWpOL2JvdGxydHlFUkkvQ0lsT2M5YXc0WkRhdmtIdS9NYkxNNDR6QlNYWExWeU5sRncrOTdIN1FaVVp4cQpwOFdKeTEyKytuSm9GaHB1bFZBNTVudXhuZFdMeW8yV2k4eWZ6a3RWVllpRDZjUWZ3Q1R2dll3TlorYlBNbkpmCkQrd2pQTm03WStkb01HSDdmMmxwRnNRSDlCRndncjZzWHJaNXBnSkUrQW51TUUyMTk2UGJOMTRSRzlCazlKa08KenU2bmNlSFlzckFhSWF0UTVJNjhhTE1CSVY2cUNKd3BKSEQwczJ0WFJUdTVLN3RvMlF3ZThpZS91K01QOEhDYwpwU0VDZ2dFQWZac3l6Y25ZTXhZamlKVGNLejFkbExhZUFYVXlDY2NyVmtoMzJERDlWeWZJSDlBT2lKRVBOV3FvCml6MnZ2Q2FtTzVsVjQ1ZGtBdjRJNkJPeHBWZVllaDNZWnZXbmpweCtjUWxxUG1uQW5VMm9ST2hxbXR0RkNCbHIKNmRhNjRsSW12VEpobGdIWW1IWWxHSnNTWlRubXR2UlhOUTVadkprMkJVYzNzVHBTSjc5YnVaeUdJeTBJYjdybQovYXhVb2l2M2ZSKzlVbzJ1eG5xSnc4dmEzRTJlRFRsVFpLOEMxMDllekhTRkZ2ZHVEdzhZN3FoMlRhVFBnUzhhCmsxbHUzTWdIb2laRnF3NXVldHdORlV4Vk9jTnFFZ0M3VlEvN3ljZkJBRzF4S0ErLzV1RzhvZTNKcTNiNVVHTFUKNXBtMHNVay9yTlFiMU4xNkltMWNUUDk0N2xQSEZBPT0KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
   service:
+    ingressPort: 443
+    loadBalancerIP: 35.187.179.96
     port: 3000
-    type: ClusterIP
   terminationGracePeriodSeconds: 10
   tolerations: []
   volume:
@@ -583,6 +696,22 @@ spec:
         runAsUser: 2000
 MANIFEST:
 ---
+# Source: devops-test/charts/logstash/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "devops-chart-logstash-pdb"
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: "devops-chart-logstash"
+---
 # Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -597,17 +726,6 @@ metadata:
   name: devops-chart-ingress-nginx
   namespace: polo
 automountServiceAccountToken: true
----
-# Source: devops-test/charts/uploader-app/templates/secrets.yaml
-apiVersion: v1
-data:
-  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZMVENDQXhXZ0F3SUJBZ0lVS0p2Q2lQNnQwMUJRQnAwQ0ZTa2FuNWVzTGVFd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0pqRWtNQ0lHQTFVRUF3d2JkWEJzYjJGa1pYSXRZWEJ3TG5CdmJHOHViRzlqWVd4b2IzTjBNQjRYRFRJeApNRFl5TkRBNU16Z3dNMW9YRFRJeU1EWXlOREE1TXpnd00xb3dKakVrTUNJR0ExVUVBd3diZFhCc2IyRmtaWEl0CllYQndMbkJ2Ykc4dWJHOWpZV3hvYjNOME1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0MKQWdFQTJjMXdQY3dHSjlnTkY4NXRsaDNOVXYxUDBabE9QNW5MNDlpRGxrNDEvNWZwODFYWk9ySmkwcmhPT0FpaQo2MU1ZYjdNOERnRi9lNmlyZk9COTRuU3JWS004TitkZzN3TU12RUlRWmpuQktXNEk3a2Jra2IvSjgrUTRoYklFCjJjZ0ZjOWVLTDJzNGNzZkpGNVY4VW0xenV2U1hBMTFXenZxSUc4UGtUZDZ0dkU1S2VWWEhURWl6dVg4Vlk0RDQKaWxOaWJHSVZoOFZHaEV2Smd5N3Y1ZVMwb0dIbE9MUGJKT0xVMndlK3NCUmp4OHlWcU40V0d1SWR4QzFja0p1NApNMU4ycFZoMjI1a1F0Z2RZYUY1ejUwNWpJU1dUU2NsSnYweDltMHZQN25OeEllTkNydlNoU2VMdGY3ZlpCcC82Cmp4K1kyT3VaS2VVUERKY2oxWGFsUXJNSmk2SmlGQzhBUnV5WG9zUmRqZ3lWSVRDVUNGVFNHVE5sNTJ2R1hJZGUKM1RCS001UitQKzd6bGpNWllWOUtMMkZtMWpIa2tUd1lQdW5CaUhZYjhHYTVybUsrMnE1c2JpcFBUZTVUczFwYwpPbUlzR3RSUXNFSFM0QlVRODVMdUI0WnBIUmVMbTdYb3hHZVJaT2RudW1jNTdtUDY3ZWJXWG1JMjVHMVh1am1iCkpYUkdQTHVZcEJLU083NCtNMWFsVFozWHNmT2Jna2RaN0MrZTJjVXBqNmEwRnhVbElrWm02aEEzdlNlZHR4LzUKTmMxM043MGRhcStCcGFWSHpaOWlOMGVnbGZuaXczMk1MRkxoT3JwbWR4bTlMMWRMenZuMlNwUmxHWlR2VmxzRwpBZmx6Szk2bTd0cDRuNXgxZ0w3VnVWS0VkWGF1cTR2N2JhSUs3VCtJNFlxem9MTUNBd0VBQWFOVE1GRXdIUVlEClZSME9CQllFRkhLZU5lRzV6TDdtZVJLOXZ5cjB6a3R6Mkh1c01COEdBMVVkSXdRWU1CYUFGSEtlTmVHNXpMN20KZVJLOXZ5cjB6a3R6Mkh1c01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dJQgpBSm1teHZKaTU2TTE0N0pMSWJ6WEl3eEp0bHJ4WDJ6cFJUTEdXN3lXdnNPMHFIR1AyczU3eWNkcm8wUEdVbWk3CjBhTU5Ub05nZXBZdHAvY3BadXNhbnZnWUxSeGk3OW9LbVlEajNXTURQOThwV3BmV1pVWG9TaXlsNXRRSWNXRnUKQ2F1ZnVwbUYvR3loS1hGdGlHQWZNV0ZsUlY0ZloyNnA5NFNOUVJMTEFLWThJU3RjeHdSeXhiMU91M0ZHT21ZbApRRzRMcVRxd1hwTWFhUHRuRkJhL0EvakFoT1lwNjM1Mkd6a1VPcHAyTTBpWVlZUm8zVXFLZUpIOTFjODZmZFBlCjQzUEp5cjNpSVFJaW9kRTVnaGhmaVV4a3ZDNWZsVnIvZXNBQ2JGMURSSkJoMHh6eGplQkg0bzdRNWZrSUJaeVQKK21uc3R5enp3NURpQ1FWSVJ2dkNYdysrcG4zbEExUis5NFhmbW1JMFZCcThtMmxmbUxqT1RydUVCUjBUL2lRTgpWM00zc3dxTUFGYVRLRnFpQi8zZXo5MEk5YUpleWNUdlFIK2VGQ2l1emdMenhjWll5MDhrSkMydC9qVVBmQ0xwCjZHTG9RSDlRNFM5dmJGSHJHaUxiYUd4bStDYzcxckpUQWJjVDFNVFdMSUdjc0xXQ05OTmJlZVlvS25yaGdkNDkKaXBvZjVlQlVFeEtBUHFmVzE5VVYvVmRXWFZwa2FWMnpEeFhwZzRxbHNlZjErak1jbGZGbVhOaXB4aEwvWG9wVgpwNm9Leklra1MvdnhjbUZLYlMvaGJ2Qzd3Y25UWmlvZ2dHRHUrT3o4Nk1qM3FCNXhCMTZsZVVmZGdPQVlORTdlCmQ5SklLNmpUYWs0bjV4ODZaZjkrQlRCNEcvdHBaZzRZaVN3Z0s4S2JOTlgzCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUpRZ0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQ1N3d2dna29BZ0VBQW9JQ0FRRFp6WEE5ekFZbjJBMFgKem0yV0hjMVMvVS9SbVU0L21jdmoySU9XVGpYL2wrbnpWZGs2c21MU3VFNDRDS0xyVXhodnN6d09BWDk3cUt0OAo0SDNpZEt0VW96dzM1MkRmQXd5OFFoQm1PY0VwYmdqdVJ1U1J2OG56NURpRnNnVFp5QVZ6MTRvdmF6aHl4OGtYCmxYeFNiWE82OUpjRFhWYk8rb2didytSTjNxMjhUa3A1VmNkTVNMTzVmeFZqZ1BpS1UySnNZaFdIeFVhRVM4bUQKTHUvbDVMU2dZZVU0czlzazR0VGJCNzZ3RkdQSHpKV28zaFlhNGgzRUxWeVFtN2d6VTNhbFdIYmJtUkMyQjFobwpYblBuVG1NaEpaTkp5VW0vVEgyYlM4L3VjM0VoNDBLdTlLRko0dTEvdDlrR24vcVBINWpZNjVrcDVROE1seVBWCmRxVkNzd21Mb21JVUx3Qkc3SmVpeEYyT0RKVWhNSlFJVk5JWk0yWG5hOFpjaDE3ZE1Fb3psSDQvN3ZPV014bGgKWDBvdllXYldNZVNSUEJnKzZjR0lkaHZ3WnJtdVlyN2FybXh1S2s5TjdsT3pXbHc2WWl3YTFGQ3dRZExnRlJEegprdTRIaG1rZEY0dWJ0ZWpFWjVGazUyZTZaem51WS9ydDV0WmVZamJrYlZlNk9ac2xkRVk4dTVpa0VwSTd2ajR6ClZxVk5uZGV4ODV1Q1IxbnNMNTdaeFNtUHByUVhGU1VpUm1icUVEZTlKNTIzSC9rMXpYYzN2UjFxcjRHbHBVZk4KbjJJM1I2Q1YrZUxEZll3c1V1RTZ1bVozR2IwdlYwdk8rZlpLbEdVWmxPOVdXd1lCK1hNcjNxYnUybmlmbkhXQQp2dFc1VW9SMWRxNnJpL3R0b2dydFA0amhpck9nc3dJREFRQUJBb0lDQUdYSm9QOEFicEFJWkhZUHZ4ODg1a3cyCm5pcnlYcU5TbVBydW9QQ0p0S3F5c0Y5TWE2MEcyVEJwZWdTdDVKWGR5N25JSmZUVnRtSndQVlNyQmFuanBINTEKbXhyMVEweDEvR211NWtNZ0VxbnVCclowNHpWS1VITnU0UXQ2V3RIOHJLK3F0Nlhaa2hQeVVvUjNGQmJobUFoegpibS9nRzBXM3lBeFJ6RXlvR01HOFJRblhrTUNSNll4elcrZVl5bzY2MFhDZGxqcFJjOWM0SkFEdTJxYXg3OGhVCmQrKzcvbHFLdDdkMU15VFBJcUtwZGZmcGNxTTFzWHVSUjRVOWdTUmJpVU5VeUpkd1BXTVVvN2lEQzkrNXZwSXIKSVY2R2Q3U3packJCQ2ZnQ2M0akcwTTg2L0hXdlhCY29NSURzR3dqd1YxcHBJTGQzbVVUbERaWWhVTEtQUVpIbgpjdnV0ZzRrYTdpcmwwTFp6Zk9uc3dhWkNMNFZ3b1ZuVEVoSFVKL1M0eTRYUU1hMUVVekVJVVBJOEh0RWY0NVhuCnhKY3ZGQ1lqUS8xUDBlRTM0N0tWZ0hNblNPeWJaOHdjTjAxVHljSDk4NWovdEt0QlpySGVqWnY1WW93bDNCYlEKdCtFQXU5Qm95dVFYaHZRZGRUWUtSMjJ1TlZ3bnhDTVE3VTNnM3pIRTNzNStDbC85V0JTS0FzZjhuaTZjMXlEbwp2aXU2UW5VTXgwZ0V2eDIxQ0tYekV0WXAvYy9sM3lMcVVRQ2FBVlRNdzhhampCTFB0YUxtY3Qxc1FnUkxhZnQrCk9WYmJLMk5IaHRxS05HWU9KdTdEKzA5RzZTSUpVODVRL0o0UUcxSzFBYVhNNTVxRjR5NkFqUUVCQVlUeWx4a2oKSysrV01PeUlKaTE3YUwrVlo0RUJBb0lCQVFEMm1vUnc0bEJZNlBscFpWWS9jQUpVWXRDMndRRExzTVhDcUVNdwpSNVRwN2NlNFhSS0VNMFZVODRYbmdGOXdKTDcyQjREWFFBMW8zc2hXcDJHMXZ4c01GenNTajIyNW5uTVZWc3dJCktVeWFVWVlRQjFoQlE3cUl3WWJCelZGN3Y1OTRFN1RpR1R6QjZUTHloWWhIUUZLQ0hDbVI0WkxjbWJwMHA4cVAKQzBIejl6enFJVEhCS3ZKSEFBVmFzVlU3d2MyRmltdzRNaSsrdjlLWFByWW83Y3d5aW1EUGtpVERiaUpOV0dEYwppY1BxMkt4aEhYWmErRkl6T2xUV1Z3OVVYaWowNi9Vb29IZEZkVlA4UjFYVm5zYVJjK2ZncFpkc3JqczB6NUJPCm5aTWVZdnljMG5GbGVyY2UxeGF6QTVIRTFjTFd4cVJWcUNGYkR2R0xlVmliTWtSVEFvSUJBUURpR2Z0MkNvUTIKdmtzS0tnZ1hFbHBCNW9CdjJNdm9lRXVtUnRBOGJmZkxVdWVJV1lBbDZHeTQwZEZVSTdSV1VsTU5QSVo3MGFGWAo0T2drOGZVbWJFTVdraWRaMU9EWHcwZmZ2eEo5eFRnQllTalpiNW11ZjBXWnNDQi9LVXBxZXZxb1JiUWpHNlgzClZ6N082VURWQ2lFVjRXQUVqb2tscUU2YkNYc2g2Um02ei9VY3lQQzdkQzB5Y1VoZVF6OVdUV2tnNEdjeTJBbFkKSUs5SVZrakJzUkllRTNrOXNZeXFrNUhoWEFPT3JZcHcrV05ZWGNoTTE4NVFFY2txcklqbE1zbkRGOXpXYkZhMgpWOHBoMnFmeXU4WGNVNlZxd1hhRkM0Ny9jWWJBdkljeFNQOStLbXM1S2tWbmpvM0ZEZnZyLzNFY0NTdk4xM0FLCnlBd2pyU1lPQ2FZaEFvSUJBUUNycmF6UVRhMzBCOVZDKzZxTXBYVHB2SlZpOVlDUlRiS1Byc1ovd1FXNXliRUYKOTcyaFRYUlNET3RHM0ljVXNuQkRKYndibmxyM2pFbGFrbEtpemJXTnVFcUd4RlYyS1FvamEvYkZJOE5SbDduRwpST2E3SU9TbXVsd1BaZG41VmRFMkxqbjZRZW1iY2JiblFmRTY4VnUvZXMyeDRxRjBkSTFyRXprZ1ZvMEd4RE9qCko1TFUwUW8wUlo1MG9nb2RmUEdRcTJwbHdRS2VRRHJpMG1UTW42aE44eW9zdDZoaWFiVDF0YlpSTXBPelZqN0QKcVZneFFya3ZNc2ZISkhybW1GclpENy93RmE2VEszaFpwR3ZzT1FveVRzZTZERzRiMmp3YnF2amkwaTZPdEFqNwpRRUp6akhnWnYxSHROR254NTRNcU5NWkpYN0JCRFdrNVdUUkhienBEQW9JQkFEblRQVTJXS1BRN1BNUFB0aHY0CmRKN3dEWjhOU2pFZE92TytucGtsNHI3Y2FCeW1EekVpdlZPVFRiOEFGcW9SQ2U2VHNTMVBrcnovNXo4enBtZjYKUGpveWpOL2JvdGxydHlFUkkvQ0lsT2M5YXc0WkRhdmtIdS9NYkxNNDR6QlNYWExWeU5sRncrOTdIN1FaVVp4cQpwOFdKeTEyKytuSm9GaHB1bFZBNTVudXhuZFdMeW8yV2k4eWZ6a3RWVllpRDZjUWZ3Q1R2dll3TlorYlBNbkpmCkQrd2pQTm03WStkb01HSDdmMmxwRnNRSDlCRndncjZzWHJaNXBnSkUrQW51TUUyMTk2UGJOMTRSRzlCazlKa08KenU2bmNlSFlzckFhSWF0UTVJNjhhTE1CSVY2cUNKd3BKSEQwczJ0WFJUdTVLN3RvMlF3ZThpZS91K01QOEhDYwpwU0VDZ2dFQWZac3l6Y25ZTXhZamlKVGNLejFkbExhZUFYVXlDY2NyVmtoMzJERDlWeWZJSDlBT2lKRVBOV3FvCml6MnZ2Q2FtTzVsVjQ1ZGtBdjRJNkJPeHBWZVllaDNZWnZXbmpweCtjUWxxUG1uQW5VMm9ST2hxbXR0RkNCbHIKNmRhNjRsSW12VEpobGdIWW1IWWxHSnNTWlRubXR2UlhOUTVadkprMkJVYzNzVHBTSjc5YnVaeUdJeTBJYjdybQovYXhVb2l2M2ZSKzlVbzJ1eG5xSnc4dmEzRTJlRFRsVFpLOEMxMDllekhTRkZ2ZHVEdzhZN3FoMlRhVFBnUzhhCmsxbHUzTWdIb2laRnF3NXVldHdORlV4Vk9jTnFFZ0M3VlEvN3ljZkJBRzF4S0ErLzV1RzhvZTNKcTNiNVVHTFUKNXBtMHNVay9yTlFiMU4xNkltMWNUUDk0N2xQSEZBPT0KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: uploader-app-tls
-type: kubernetes.io/tls
 ---
 # Source: devops-test/templates/secrets.yaml
 apiVersion: v1
@@ -647,11 +765,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  volumeMode: standard
   resources:
     requests:
       storage: 1Gi
-  storageClassName: mongo-pv
 ---
 # Source: devops-test/charts/uploader-app/templates/pvc.yaml
 apiVersion: v1
@@ -662,11 +778,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  volumeMode: standard
   resources:
     requests:
       storage: 5Gi
-  storageClassName: uploader-pv
 ---
 # Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -865,13 +979,30 @@ subjects:
     name: devops-chart-ingress-nginx
     namespace: "polo"
 ---
+# Source: devops-test/charts/logstash/templates/service-headless.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: "devops-chart-logstash-headless"
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  clusterIP: None
+  selector:
+    app: "devops-chart-logstash"
+  ports:
+    - name: http
+      port: 9600
+---
 # Source: devops-test/charts/mongo/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: mongodb
   namespace: polo
-
 spec:
   type: ClusterIP
   ports:
@@ -940,12 +1071,16 @@ kind: Service
 metadata:
   name: uploader-app
   namespace: polo
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: uploader-app
   type: NodePort
   ports:
-  - port: 3000
+  - name: http
+    protocol: TCP
+    port: 3000
     targetPort: 3000
 ---
 # Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-deployment.yaml
@@ -1070,7 +1205,7 @@ metadata:
   name: uploader-app
   labels:
     app: uploader
-  namespace: polo  #  polo
+  namespace: polo
 spec:
   replicas: 1  #  1
   selector:
@@ -1102,10 +1237,125 @@ spec:
         envFrom:
         - secretRef:
             name: mongo-secret
+      - name: logstash
+        image: maanadev/logstash:6.5.3-custom
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /usr/share/logstash/mylogs/
+        - name: logstash-yml
+          mountPath: /usr/share/logstash/config/logstash.yml
+          subPath: logstash.yml
+        - name: logstash-conf
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf
+        env:
+        - name: NODE_ID
+          value: "uploader-app"
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+             fieldPath: status.podIP
+        
       volumes:
       - name: uploaded
         persistentVolumeClaim:
           claimName: uploads-claim
+      - name: shared-logs
+        emptyDir: {}
+      - name: logstash-yml
+        configMap:
+          name: logstash-yml
+      - name: logstash-conf
+        configMap:
+          name: logstash-conf
+---
+# Source: devops-test/charts/logstash/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devops-chart-logstash
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  serviceName: devops-chart-logstash-headless
+  selector:
+    matchLabels:
+      app: "devops-chart-logstash"
+      release: "devops-chart"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: "devops-chart-logstash"
+      labels:
+        app: "devops-chart-logstash"
+        chart: "logstash"
+        heritage: "Helm"
+        release: "devops-chart"
+      annotations:
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "devops-chart-logstash"
+            topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      volumes:
+      containers:
+      - name: "logstash"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "docker.elastic.co/logstash/logstash:8.0.0-SNAPSHOT"
+        imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        ports:
+        - name: http
+          containerPort: 9600
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1536Mi
+          requests:
+            cpu: "1"
+            memory: 1536Mi
+        env:
+          - name: LS_JAVA_OPTS
+            value: "-Xmx1g -Xms1g"
+        volumeMounts:
 ---
 # Source: devops-test/charts/mongo/templates/stateful-set.yaml
 apiVersion: apps/v1
@@ -1160,24 +1410,32 @@ metadata:
   name: ingress-uploader-app
   namespace: polo
   annotations:
-    # use the shared ingress-nginx
-    kubernetes.io/ingress.class: "nginx"
-    ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/secure-backends: "false"
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: uploader-ip
+    networking.gke.io/managed-certificates: uploader-certificate
 spec:
-  rules:
-  - host: uploader-app.polo.localhost
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: uploader-app
-            port: 
-              number: 3000
+  rules: 
+    - host: 
+      http:
+        paths:
+        - path: /*
+          pathType: Prefix
+          backend:
+            service:
+              name: uploader-app
+              port:
+                number: 3000
+---
+# Source: devops-test/charts/uploader-app/templates/certificate.yaml
+apiVersion: networking.gke.io/v1beta1
+kind: ManagedCertificate
+
+metadata:
+  name: uploader-certificate
+  namespace: polo
+spec:
+  domains:
+    - quelle-indignite.com
 ---
 # Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/validating-webhook.yaml
 # before changing this value, check the required kubernetes version

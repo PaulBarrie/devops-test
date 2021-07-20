@@ -12,3 +12,6 @@ dependencies:
 - name: mongo
   repository: file://subcharts/mongo
   version: 0.1.0
+- name: eck
+  repository: file://subcharts/eck
+  version: 0.1.0

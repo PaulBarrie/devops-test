@@ -1,4 +1,20 @@
 ---
+# Source: devops-test/charts/logstash/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "devops-chart-logstash-pdb"
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: "devops-chart-logstash"
+---
 # Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -266,6 +282,24 @@ subjects:
     name: devops-chart-ingress-nginx
     namespace: "polo"
 ---
+# Source: devops-test/charts/logstash/templates/service-headless.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: "devops-chart-logstash-headless"
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  clusterIP: None
+  selector:
+    app: "devops-chart-logstash"
+  ports:
+    - name: http
+      port: 9600
+---
 # Source: devops-test/charts/mongo/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -340,12 +374,15 @@ kind: Service
 metadata:
   name: uploader-app
   namespace: polo
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: uploader-app
   type: NodePort
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: 3000
     targetPort: 3000
 ---
@@ -471,7 +508,7 @@ metadata:
   name: uploader-app
   labels:
     app: uploader
-  namespace: polo  #  polo
+  namespace: polo
 spec:
   replicas: 1  #  1
   selector:
@@ -503,10 +540,125 @@ spec:
         envFrom:
         - secretRef:
             name: mongo-secret
+      - name: logstash
+        image: maanadev/logstash:6.5.3-custom
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /usr/share/logstash/mylogs/
+        - name: logstash-yml
+          mountPath: /usr/share/logstash/config/logstash.yml
+          subPath: logstash.yml
+        - name: logstash-conf
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf
+        env:
+        - name: NODE_ID
+          value: "uploader-app"
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+             fieldPath: status.podIP
+        
       volumes:
       - name: uploaded
         persistentVolumeClaim:
           claimName: uploads-claim
+      - name: shared-logs
+        emptyDir: {}
+      - name: logstash-yml
+        configMap:
+          name: logstash-yml
+      - name: logstash-conf
+        configMap:
+          name: logstash-conf
+---
+# Source: devops-test/charts/logstash/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devops-chart-logstash
+  labels:
+    app: "devops-chart-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "devops-chart"
+spec:
+  serviceName: devops-chart-logstash-headless
+  selector:
+    matchLabels:
+      app: "devops-chart-logstash"
+      release: "devops-chart"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: "devops-chart-logstash"
+      labels:
+        app: "devops-chart-logstash"
+        chart: "logstash"
+        heritage: "Helm"
+        release: "devops-chart"
+      annotations:
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "devops-chart-logstash"
+            topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      volumes:
+      containers:
+      - name: "logstash"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "docker.elastic.co/logstash/logstash:7.13.3"
+        imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        ports:
+        - name: http
+          containerPort: 9600
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1536Mi
+          requests:
+            cpu: 100m
+            memory: 1536Mi
+        env:
+          - name: LS_JAVA_OPTS
+            value: "-Xmx1g -Xms1g"
+        volumeMounts:
 ---
 # Source: devops-test/charts/mongo/templates/stateful-set.yaml
 apiVersion: apps/v1
@@ -564,13 +716,18 @@ metadata:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: uploader-ip
     networking.gke.io/managed-certificates: uploader-certificate
-
 spec:
-  defaultBackend:
-    service:
-      name: uploader-app
-      port:
-        number: 3000
+  rules: 
+    - host: 
+      http:
+        paths:
+        - path: /*
+          pathType: Prefix
+          backend:
+            service:
+              name: uploader-app
+              port:
+                number: 3000
 ---
 # Source: devops-test/charts/uploader-app/templates/certificate.yaml
 apiVersion: networking.gke.io/v1beta1

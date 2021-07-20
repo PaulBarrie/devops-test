@@ -5,5 +5,8 @@ dependencies:
 - name: mongo
   repository: file://subcharts/mongo
   version: 0.1.0
-digest: sha256:93ce9faa7f3fab555c6027be1f7ac9f4b913a245028b4ee29b90f901b6415234
-generated: "2021-06-25T15:45:02.660123205+02:00"
+- name: logstash
+  repository: https://helm.elastic.co
+  version: 7.13.3
+digest: sha256:b30146ba1fe577a27d875617f457dfcd125baf4006962b9061db2d7413cabe1f
+generated: "2021-07-20T14:53:05.348007428+02:00"

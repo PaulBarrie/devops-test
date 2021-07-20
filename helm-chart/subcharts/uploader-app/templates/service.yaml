@@ -11,7 +11,8 @@ spec:
   type: NodePort
   {{- with .Values.service }}
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: {{ $.Values.service.port }}
     targetPort: {{ $.Values.service.port }}
   {{- end }}

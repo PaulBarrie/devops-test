@@ -3,6 +3,8 @@
 # Declare variables to be passed into your templates.
 global:
   namespace: polo
+  project_id: winged-ratio-312113
+  hostIp: 34.149.247.54
 
 secrets:
   mongo:
