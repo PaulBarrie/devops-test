@@ -1,5 +1,5 @@
 NAME: devops-chart
-LAST DEPLOYED: Tue Jul 20 15:18:49 2021
+LAST DEPLOYED: Sat Jul 24 14:44:16 2021
 NAMESPACE: polo
 STATUS: pending-install
 REVISION: 1
@@ -8,119 +8,87 @@ USER-SUPPLIED VALUES:
 {}
 
 COMPUTED VALUES:
-global:
-  namespace: polo
-  project_id: winged-ratio-312113
-logstash:
-  antiAffinity: hard
-  antiAffinityTopologyKey: kubernetes.io/hostname
-  envFrom: []
-  extraContainers: ""
-  extraEnvs: []
-  extraInitContainers: ""
-  extraPorts: []
-  extraVolumeMounts: ""
-  extraVolumes: ""
-  fullnameOverride: ""
+app:
+  affinity: {}
+  autoscaling:
+    enabled: false
+    maxReplicas: 100
+    minReplicas: 1
+    targetCPUUtilizationPercentage: 80
+  domain: quelle-indignite.com
   global:
+    hostIp: 34.149.247.54
+    hostname: quelle-indignite.com
     namespace: polo
     project_id: winged-ratio-312113
-  hostAliases: []
-  httpPort: 9600
-  image: docker.elastic.co/logstash/logstash
-  imagePullPolicy: IfNotPresent
-  imagePullSecrets: []
-  imageTag: 8.0.0-SNAPSHOT
-  ingress:
-    enabled: false
-  labels: {}
-  lifecycle: {}
-  livenessProbe:
-    failureThreshold: 3
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 300
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 5
-  logstashConfig: {}
-  logstashJavaOpts: -Xmx1g -Xms1g
-  logstashPattern: {}
-  logstashPatternDir: /usr/share/logstash/patterns/
-  logstashPipeline: {}
-  maxUnavailable: 1
-  nameOverride: ""
-  nodeAffinity: {}
+  hostname: uploader.quelle-indignite.com
+  image:
+    name: uploader-app
+    registry: paulb314
+    tag: latest
   nodeSelector: {}
-  persistence:
-    annotations: {}
-    enabled: false
-  podAffinity: {}
-  podAnnotations: {}
-  podManagementPolicy: Parallel
-  podSecurityContext:
-    fsGroup: 1000
-    runAsUser: 1000
-  podSecurityPolicy:
-    create: false
-    name: ""
-    spec:
-      fsGroup:
-        rule: RunAsAny
-      privileged: false
-      runAsUser:
-        rule: RunAsAny
-      seLinux:
-        rule: RunAsAny
-      supplementalGroups:
-        rule: RunAsAny
-      volumes:
-      - secret
-      - configMap
-      - persistentVolumeClaim
-  priorityClassName: ""
-  rbac:
-    annotations: {}
-    create: false
-    serviceAccountAnnotations: {}
-    serviceAccountName: ""
-  readinessProbe:
-    failureThreshold: 3
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    successThreshold: 3
-    timeoutSeconds: 5
+  ports:
+    logstash: 31998
   replicas: 1
   resources:
-    limits:
-      cpu: "1"
-      memory: 1536Mi
-    requests:
-      cpu: "1"
-      memory: 1536Mi
-  schedulerName: ""
-  secretMounts: []
-  secrets: []
-  securityContext:
-    capabilities:
-      drop:
-      - ALL
-    runAsNonRoot: true
-    runAsUser: 1000
-  service: {}
-  terminationGracePeriod: 120
+    cpu: "0.5"
+    memory: 300Mi
+  service:
+    hostname: uploader.quelle-indignite.com
+    ingressPort: 443
+    loadBalancerIP: 34.142.1.110
+    name: uploader-app
+    port: 3000
+    replicas: 1
+    service:
+      ingressPort: 443
+      loadBalancerIP: 34.142.1.110
+      name: uploader-app
+      port: 3000
+  terminationGracePeriodSeconds: 10
   tolerations: []
-  updateStrategy: RollingUpdate
-  volumeClaimTemplate:
-    accessModes:
-    - ReadWriteOnce
+  volume:
+    accessMode: ReadWriteOnce
+    storageRequest: 5Gi
+    volumeMode: standard
+eck:
+  elasticsearch:
+    host: elasticsearch.quelle-indignite.com
+    port: 9200
+    protocol: http
     resources:
+      limits:
+        cpu: 1
+        memory: 4Gi
       requests:
-        storage: 1Gi
+        cpu: 1
+        memory: 4Gi
+    secrets:
+      password: cGFzc3dvcmQtdGVzdAo=
+      username: YWRtaW4tdGVzdAo=
+  global:
+    hostIp: 34.149.247.54
+    hostname: quelle-indignite.com
+    namespace: polo
+    project_id: winged-ratio-312113
+  kibana:
+    host: kibana.quelle-indignite.com
+    name: kibana
+    service:
+      name: kibana
+      port: 5601
+  version: 7.13.4
+global:
+  hostIp: 34.149.247.54
+  hostname: quelle-indignite.com
+  namespace: polo
+  project_id: winged-ratio-312113
+ingress:
+  annotations: {}
+  className: ""
+  enabled: false
+  global_static_ip_name: quelleindignite
+  tls: []
 mongo:
   affinity: {}
   autoscaling:
@@ -129,6 +97,8 @@ mongo:
     minReplicas: 1
     targetCPUUtilizationPercentage: 80
   global:
+    hostIp: 34.149.247.54
+    hostname: quelle-indignite.com
     namespace: polo
     project_id: winged-ratio-312113
   image:
@@ -147,7 +117,7 @@ mongo:
   nodeSelector: {}
   replicaCount: 1
   resources:
-    cpu: 1
+    cpu: "1"
     memory: 300Mi
   service:
     port: 27017
@@ -164,568 +134,19 @@ secrets:
     MONGO_INITDB_DATABASE: dXBsb2FkZXI=
     MONGO_INITDB_ROOT_PASSWORD: YWljMVV5b2g0dnVhMWll
     MONGO_INITDB_ROOT_USERNAME: cm9vdA==
-uploader-app:
-  affinity: {}
-  autoscaling:
-    enabled: false
-    maxReplicas: 100
-    minReplicas: 1
-    targetCPUUtilizationPercentage: 80
-  domain: quelle-indignite.com
-  global:
-    namespace: polo
-    project_id: winged-ratio-312113
-  image:
-    name: uploader-app
-    registry: paulb314
-    tag: latest
-  ingress:
-    annotations: {}
-    className: ""
-    enabled: false
-    global_static_ip_name: uploader-ip
-    hosts:
-    - host: uploader-app.polo.localhost
-      paths:
-      - path: /
-        pathType: Prefix
-        port: 3000
-    tls: []
-  ingress-nginx:
-    controller:
-      addHeaders: {}
-      admissionWebhooks:
-        annotations: {}
-        certificate: /usr/local/certificates/cert
-        enabled: true
-        existingPsp: ""
-        failurePolicy: Fail
-        key: /usr/local/certificates/key
-        namespaceSelector: {}
-        objectSelector: {}
-        patch:
-          enabled: true
-          image:
-            image: jettech/kube-webhook-certgen
-            pullPolicy: IfNotPresent
-            registry: docker.io
-            tag: v1.5.1
-          nodeSelector: {}
-          podAnnotations: {}
-          priorityClassName: ""
-          runAsUser: 2000
-          tolerations: []
-        port: 8443
-        service:
-          annotations: {}
-          externalIPs: []
-          loadBalancerSourceRanges: []
-          servicePort: 443
-          type: ClusterIP
-      affinity: {}
-      annotations: {}
-      autoscaling:
-        enabled: false
-        maxReplicas: 11
-        minReplicas: 1
-        targetCPUUtilizationPercentage: 50
-        targetMemoryUtilizationPercentage: 50
-      autoscalingTemplate: []
-      config: {}
-      configAnnotations: {}
-      configMapNamespace: ""
-      containerName: controller
-      containerPort:
-        http: 80
-        https: 443
-      customTemplate:
-        configMapKey: ""
-        configMapName: ""
-      dnsConfig: {}
-      dnsPolicy: ClusterFirst
-      electionID: ingress-controller-leader
-      enableMimalloc: true
-      existingPsp: ""
-      extraArgs: {}
-      extraContainers: []
-      extraEnvs: []
-      extraInitContainers: []
-      extraVolumeMounts: []
-      extraVolumes: []
-      healthCheckPath: /healthz
-      hostNetwork: false
-      hostPort:
-        enabled: false
-        ports:
-          http: 80
-          https: 443
-      image:
-        allowPrivilegeEscalation: true
-        digest: sha256:a1e4efc107be0bb78f32eaec37bef17d7a0c81bec8066cdf2572508d21351d0b
-        image: ingress-nginx/controller
-        pullPolicy: IfNotPresent
-        registry: k8s.gcr.io
-        runAsUser: 101
-        tag: v0.47.0
-      ingressClass: nginx
-      ingressClassResource:
-        default: false
-        enabled: false
-        parameters: {}
-      keda:
-        apiVersion: keda.sh/v1alpha1
-        behavior: {}
-        cooldownPeriod: 300
-        enabled: false
-        maxReplicas: 11
-        minReplicas: 1
-        pollingInterval: 30
-        restoreToOriginalReplicaCount: false
-        scaledObject:
-          annotations: {}
-        triggers: []
-      kind: Deployment
-      labels: {}
-      lifecycle:
-        preStop:
-          exec:
-            command:
-            - /wait-shutdown
-      livenessProbe:
-        failureThreshold: 5
-        httpGet:
-          path: /healthz
-          port: 10254
-          scheme: HTTP
-        initialDelaySeconds: 10
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 1
-      maxmindLicenseKey: ""
-      metrics:
-        enabled: false
-        port: 10254
-        prometheusRule:
-          additionalLabels: {}
-          enabled: false
-          rules: []
-        service:
-          annotations: {}
-          externalIPs: []
-          loadBalancerSourceRanges: []
-          servicePort: 10254
-          type: ClusterIP
-        serviceMonitor:
-          additionalLabels: {}
-          enabled: false
-          metricRelabelings: []
-          namespace: ""
-          namespaceSelector: {}
-          scrapeInterval: 30s
-          targetLabels: []
-      minAvailable: 1
-      minReadySeconds: 0
-      name: controller
-      nodeSelector:
-        kubernetes.io/os: linux
-      podAnnotations: {}
-      podLabels: {}
-      podSecurityContext: {}
-      priorityClassName: ""
-      proxySetHeaders: {}
-      publishService:
-        enabled: true
-        pathOverride: ""
-      readinessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /healthz
-          port: 10254
-          scheme: HTTP
-        initialDelaySeconds: 10
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 1
-      replicaCount: 1
-      reportNodeInternalIp: false
-      resources:
-        requests:
-          cpu: 100m
-          memory: 90Mi
-      scope:
-        enabled: false
-        namespace: ""
-      service:
-        annotations: {}
-        enableHttp: true
-        enableHttps: true
-        enabled: true
-        externalIPs: []
-        internal:
-          annotations: {}
-          enabled: false
-          loadBalancerSourceRanges: []
-        labels: {}
-        loadBalancerSourceRanges: []
-        nodePorts:
-          http: ""
-          https: ""
-          tcp: {}
-          udp: {}
-        ports:
-          http: 80
-          https: 443
-        targetPorts:
-          http: http
-          https: https
-        type: LoadBalancer
-      sysctls: {}
-      tcp:
-        annotations: {}
-        configMapNamespace: ""
-      terminationGracePeriodSeconds: 300
-      tolerations: []
-      topologySpreadConstraints: []
-      udp:
-        annotations: {}
-        configMapNamespace: ""
-      updateStrategy: {}
-    defaultBackend:
-      affinity: {}
-      autoscaling:
-        annotations: {}
-        enabled: false
-        maxReplicas: 2
-        minReplicas: 1
-        targetCPUUtilizationPercentage: 50
-        targetMemoryUtilizationPercentage: 50
-      enabled: false
-      existingPsp: ""
-      extraArgs: {}
-      extraEnvs: []
-      extraVolumeMounts: []
-      extraVolumes: []
-      image:
-        allowPrivilegeEscalation: false
-        image: defaultbackend-amd64
-        pullPolicy: IfNotPresent
-        readOnlyRootFilesystem: true
-        registry: k8s.gcr.io
-        runAsNonRoot: true
-        runAsUser: 65534
-        tag: "1.5"
-      livenessProbe:
-        failureThreshold: 3
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 5
-      minAvailable: 1
-      name: defaultbackend
-      nodeSelector: {}
-      podAnnotations: {}
-      podLabels: {}
-      podSecurityContext: {}
-      port: 8080
-      priorityClassName: ""
-      readinessProbe:
-        failureThreshold: 6
-        initialDelaySeconds: 0
-        periodSeconds: 5
-        successThreshold: 1
-        timeoutSeconds: 5
-      replicaCount: 1
-      resources: {}
-      service:
-        annotations: {}
-        externalIPs: []
-        loadBalancerSourceRanges: []
-        servicePort: 80
-        type: ClusterIP
-      serviceAccount:
-        automountServiceAccountToken: true
-        create: true
-        name: ""
-      tolerations: []
-    dhParam: null
-    global:
-      namespace: polo
-      project_id: winged-ratio-312113
-    imagePullSecrets: []
-    podSecurityPolicy:
-      enabled: false
-    rbac:
-      create: true
-      scope: false
-    revisionHistoryLimit: 10
-    serviceAccount:
-      automountServiceAccountToken: true
-      create: true
-      name: ""
-    tcp: {}
-    udp: {}
-  nodeSelector: {}
-  replicaCount: 1
-  resources:
-    cpu: 0.5
-    memory: 300Mi
-  service:
-    ingressPort: 443
-    loadBalancerIP: 35.187.179.96
-    port: 3000
-  terminationGracePeriodSeconds: 10
-  tolerations: []
-  volume:
-    accessMode: ReadWriteOnce
-    storageRequest: 5Gi
-    volumeMode: standard
 
 HOOKS:
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: devops-chart-ingress-nginx-admission
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrole.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: devops-chart-ingress-nginx-admission
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-rules:
-  - apiGroups:
-      - admissionregistration.k8s.io
-    resources:
-      - validatingwebhookconfigurations
-    verbs:
-      - get
-      - update
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name:  devops-chart-ingress-nginx-admission
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: devops-chart-ingress-nginx-admission
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx-admission
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name:  devops-chart-ingress-nginx-admission
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
-      - create
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: devops-chart-ingress-nginx-admission
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: devops-chart-ingress-nginx-admission
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx-admission
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-createSecret.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: devops-chart-ingress-nginx-admission-create
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-spec:
-  template:
-    metadata:
-      name: devops-chart-ingress-nginx-admission-create
-      labels:
-        helm.sh/chart: ingress-nginx-3.34.0
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/version: "0.47.0"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: admission-webhook
-    spec:
-      containers:
-        - name: create
-          image: "docker.io/jettech/kube-webhook-certgen:v1.5.1"
-          imagePullPolicy: IfNotPresent
-          args:
-            - create
-            - --host=devops-chart-ingress-nginx-controller-admission,devops-chart-ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
-            - --namespace=$(POD_NAMESPACE)
-            - --secret-name=devops-chart-ingress-nginx-admission
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-      restartPolicy: OnFailure
-      serviceAccountName: devops-chart-ingress-nginx-admission
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-patchWebhook.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: devops-chart-ingress-nginx-admission-patch
-  namespace: polo
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-spec:
-  template:
-    metadata:
-      name: devops-chart-ingress-nginx-admission-patch
-      labels:
-        helm.sh/chart: ingress-nginx-3.34.0
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/version: "0.47.0"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: admission-webhook
-    spec:
-      containers:
-        - name: patch
-          image: "docker.io/jettech/kube-webhook-certgen:v1.5.1"
-          imagePullPolicy: IfNotPresent
-          args:
-            - patch
-            - --webhook-name=devops-chart-ingress-nginx-admission
-            - --namespace=$(POD_NAMESPACE)
-            - --patch-mutating=false
-            - --secret-name=devops-chart-ingress-nginx-admission
-            - --patch-failure-policy=Fail
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-      restartPolicy: OnFailure
-      serviceAccountName: devops-chart-ingress-nginx-admission
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
 MANIFEST:
 ---
-# Source: devops-test/charts/logstash/templates/poddisruptionbudget.yaml
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: "devops-chart-logstash-pdb"
-  labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
-    heritage: "Helm"
-    release: "devops-chart"
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app: "devops-chart-logstash"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-serviceaccount.yaml
+# Source: devops-test/charts/eck/templates/secrets.yml
 apiVersion: v1
-kind: ServiceAccount
+kind: Secret
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
-  namespace: polo
-automountServiceAccountToken: true
+ name: es-credentials
+type: Opaque
+data:
+    ES_USERNAME: YWRtaW4tdGVzdAo=
+    ES_PASSWORD: cGFzc3dvcmQtdGVzdAo=
 ---
 # Source: devops-test/templates/secrets.yaml
 apiVersion: v1
@@ -741,20 +162,18 @@ metadata:
   name: mongo-secret
   namespace: polo
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-configmap.yaml
+# Source: devops-test/charts/app/templates/pvc.yaml
 apiVersion: v1
-kind: ConfigMap
+kind: PersistentVolumeClaim
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
+  name: uploads-claim
   namespace: polo
-data:
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
 ---
 # Source: devops-test/charts/mongo/templates/pvc.yaml
 apiVersion: v1
@@ -769,303 +188,7 @@ spec:
     requests:
       storage: 1Gi
 ---
-# Source: devops-test/charts/uploader-app/templates/pvc.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: uploads-claim
-  namespace: polo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/clusterrole.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-  name: devops-chart-ingress-nginx
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - endpoints
-      - nodes
-      - pods
-      - secrets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses/status
-    verbs:
-      - update
-  - apiGroups:
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-  name: devops-chart-ingress-nginx
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: devops-chart-ingress-nginx
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
-  namespace: polo
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - pods
-      - secrets
-      - endpoints
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses/status
-    verbs:
-      - update
-  - apiGroups:
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    resourceNames:
-      - ingress-controller-leader-nginx
-    verbs:
-      - get
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - create
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
-  namespace: polo
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: devops-chart-ingress-nginx
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx
-    namespace: "polo"
----
-# Source: devops-test/charts/logstash/templates/service-headless.yaml
-kind: Service
-apiVersion: v1
-metadata:
-  name: "devops-chart-logstash-headless"
-  labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
-    heritage: "Helm"
-    release: "devops-chart"
-spec:
-  clusterIP: None
-  selector:
-    app: "devops-chart-logstash"
-  ports:
-    - name: http
-      port: 9600
----
-# Source: devops-test/charts/mongo/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb
-  namespace: polo
-spec:
-  type: ClusterIP
-  ports:
-  - targetPort: 27017
-    port: 27017
-  selector:
-    app: mongodb
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-service-webhook.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller-admission
-  namespace: polo
-spec:
-  type: ClusterIP
-  ports:
-    - name: https-webhook
-      port: 443
-      targetPort: webhook
-  selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/component: controller
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
-  namespace: polo
-spec:
-  type: LoadBalancer
-  ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: http
-    - name: https
-      port: 443
-      protocol: TCP
-      targetPort: https
-  selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/component: controller
----
-# Source: devops-test/charts/uploader-app/templates/service.yaml
+# Source: devops-test/charts/app/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -1083,121 +206,21 @@ spec:
     port: 3000
     targetPort: 3000
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
+# Source: devops-test/charts/mongo/templates/service.yaml
+apiVersion: v1
+kind: Service
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
+  name: mongodb
   namespace: polo
 spec:
+  type: ClusterIP
+  ports:
+  - targetPort: 27017
+    port: 27017
   selector:
-    matchLabels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/instance: devops-chart
-      app.kubernetes.io/component: controller
-  replicas: 1
-  revisionHistoryLimit: 10
-  minReadySeconds: 0
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/component: controller
-    spec:
-      dnsPolicy: ClusterFirst
-      containers:
-        - name: controller
-          image: "k8s.gcr.io/ingress-nginx/controller:v0.47.0@sha256:a1e4efc107be0bb78f32eaec37bef17d7a0c81bec8066cdf2572508d21351d0b"
-          imagePullPolicy: IfNotPresent
-          lifecycle: 
-            preStop:
-              exec:
-                command:
-                - /wait-shutdown
-          args:
-            - /nginx-ingress-controller
-            - --publish-service=$(POD_NAMESPACE)/devops-chart-ingress-nginx-controller
-            - --election-id=ingress-controller-leader
-            - --ingress-class=nginx
-            - --configmap=$(POD_NAMESPACE)/devops-chart-ingress-nginx-controller
-            - --validating-webhook=:8443
-            - --validating-webhook-certificate=/usr/local/certificates/cert
-            - --validating-webhook-key=/usr/local/certificates/key
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            runAsUser: 101
-            allowPrivilegeEscalation: true
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: LD_PRELOAD
-              value: /usr/local/lib/libmimalloc.so
-          livenessProbe: 
-            failureThreshold: 5
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe: 
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-            - name: https
-              containerPort: 443
-              protocol: TCP
-            - name: webhook
-              containerPort: 8443
-              protocol: TCP
-          volumeMounts:
-            - name: webhook-cert
-              mountPath: /usr/local/certificates/
-              readOnly: true
-          resources: 
-            requests:
-              cpu: 100m
-              memory: 90Mi
-      nodeSelector: 
-        kubernetes.io/os: linux
-      serviceAccountName: devops-chart-ingress-nginx
-      terminationGracePeriodSeconds: 300
-      volumes:
-        - name: webhook-cert
-          secret:
-            secretName: devops-chart-ingress-nginx-admission
+    app: mongodb
 ---
-# Source: devops-test/charts/uploader-app/templates/deployment.yaml
+# Source: devops-test/charts/app/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 
@@ -1207,7 +230,7 @@ metadata:
     app: uploader
   namespace: polo
 spec:
-  replicas: 1  #  1
+  replicas: 1
   selector:
     matchLabels:
       app: uploader-app
@@ -1226,136 +249,43 @@ spec:
           - containerPort: 3000
         resources:
           limits:
-            cpu: 0.5
-            memory: 300Mi
+                cpu: "0.5"
+                memory: 300Mi
           requests:
-            cpu: 0.5
-            memory: 300Mi
+                cpu: "0.5"
+                memory: 300Mi
         volumeMounts:
           - name: uploaded
             mountPath: /usr/app/src/uploaded
         envFrom:
         - secretRef:
             name: mongo-secret
-      - name: logstash
-        image: maanadev/logstash:6.5.3-custom
-        volumeMounts:
-        - name: shared-logs
-          mountPath: /usr/share/logstash/mylogs/
-        - name: logstash-yml
-          mountPath: /usr/share/logstash/config/logstash.yml
-          subPath: logstash.yml
-        - name: logstash-conf
-          mountPath: /usr/share/logstash/pipeline/logstash.conf
-          subPath: logstash.conf
-        env:
-        - name: NODE_ID
-          value: "uploader-app"
-        - name: NODE_IP
-          valueFrom:
-            fieldRef:
-             fieldPath: status.podIP
-        
+      # - name: filebeat
+      #   image: elastic/filebeat:7.8.0
+      #   env:
+      #   - name: LOGSTASH_HOSTS
+      #     value: 34.149.247.54:31998
+      #   args: [
+      #     "-c", "/etc/filebeat/filebeat.yml",
+      #     "-e"
+      #   ]
+      #   volumeMounts:
+      #   - name: log-output
+      #     mountPath: /tmp/
+      #   - name: beat-config
+      #     mountPath: /etc/filebeat/
       volumes:
-      - name: uploaded
-        persistentVolumeClaim:
-          claimName: uploads-claim
-      - name: shared-logs
-        emptyDir: {}
-      - name: logstash-yml
-        configMap:
-          name: logstash-yml
-      - name: logstash-conf
-        configMap:
-          name: logstash-conf
----
-# Source: devops-test/charts/logstash/templates/statefulset.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: devops-chart-logstash
-  labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
-    heritage: "Helm"
-    release: "devops-chart"
-spec:
-  serviceName: devops-chart-logstash-headless
-  selector:
-    matchLabels:
-      app: "devops-chart-logstash"
-      release: "devops-chart"
-  replicas: 1
-  podManagementPolicy: Parallel
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      name: "devops-chart-logstash"
-      labels:
-        app: "devops-chart-logstash"
-        chart: "logstash"
-        heritage: "Helm"
-        release: "devops-chart"
-      annotations:
-    spec:
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - "devops-chart-logstash"
-            topologyKey: kubernetes.io/hostname
-      terminationGracePeriodSeconds: 120
-      volumes:
-      containers:
-      - name: "logstash"
-        securityContext:
-          capabilities:
-            drop:
-            - ALL
-          runAsNonRoot: true
-          runAsUser: 1000
-        image: "docker.elastic.co/logstash/logstash:8.0.0-SNAPSHOT"
-        imagePullPolicy: "IfNotPresent"
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 300
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          successThreshold: 3
-          timeoutSeconds: 5
-        ports:
-        - name: http
-          containerPort: 9600
-        resources:
-          limits:
-            cpu: "1"
-            memory: 1536Mi
-          requests:
-            cpu: "1"
-            memory: 1536Mi
-        env:
-          - name: LS_JAVA_OPTS
-            value: "-Xmx1g -Xms1g"
-        volumeMounts:
+        - name: uploaded
+          persistentVolumeClaim:
+            claimName: uploads-claim
+      #   - name: log-output
+      #     emptyDir: {}
+      #   - name: beat-config
+      #     configMap:
+      #       name: beat-config
+      #       items:
+      #       - key: filebeat.yml
+      #         path: filebeat.yml
 ---
 # Source: devops-test/charts/mongo/templates/stateful-set.yaml
 apiVersion: apps/v1
@@ -1403,7 +333,7 @@ spec:
         persistentVolumeClaim:
           claimName: mongo-claim
 ---
-# Source: devops-test/charts/uploader-app/templates/ingress.yaml
+# Source: devops-test/templates/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -1411,22 +341,92 @@ metadata:
   namespace: polo
   annotations:
     kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: uploader-ip
+    kubernetes.io/ingress.global-static-ip-name: quelleindignite
     networking.gke.io/managed-certificates: uploader-certificate
 spec:
   rules: 
-    - host: 
+    - host: quelle-indignite.com
       http:
         paths:
-        - path: /*
+        - path: /*  
           pathType: Prefix
           backend:
             service:
               name: uploader-app
               port:
                 number: 3000
+    - host: "kibana.quelle-indignite.com"
+      http:
+        paths:
+        - path: /*
+          pathType: Prefix
+          backend:
+            service:
+              name: kibana
+              port: 
+                number: 5601
 ---
-# Source: devops-test/charts/uploader-app/templates/certificate.yaml
+# Source: devops-test/charts/eck/templates/elasticsearch.yml
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-sample
+spec:
+  version: 7.13.4
+  nodeSets:
+    - name: default
+      config:
+        node.roles:
+          - master
+          - data
+        node.attr.attr_name: attr_value
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          labels:
+            foo: bar
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                
+                limits:
+                  cpu: 1
+                  memory: 4Gi
+                requests:
+                  cpu: 1
+                  memory: 4Gi
+      count: 1
+---
+# Source: devops-test/charts/eck/templates/kibana.yml
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name:  kibana.quelle-indignite.com
+spec:
+  version: 7.13.4
+  count: 1
+  config:
+    elasticsearch.hosts:
+      - elasticsearch.quelle-indignite.com
+    elasticsearch.username: 
+    elasticsearch.ssl.certificateAuthorities: /etc/certs/ca.crt
+  secureSettings:
+    - secretName: kibana-elasticsearch-credentials
+  podTemplate:
+    spec:
+      volumes:
+        - name: elasticsearch-certs
+          secret:
+            secretName: es-credentials
+      containers:
+        - name: kibana
+          volumeMounts:
+            - name: elasticsearch-certs
+              mountPath: /etc/certs
+              readOnly: true
+---
+# Source: devops-test/charts/app/templates/certificate.yaml
 apiVersion: networking.gke.io/v1beta1
 kind: ManagedCertificate
 
@@ -1437,41 +437,15 @@ spec:
   domains:
     - quelle-indignite.com
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/validating-webhook.yaml
-# before changing this value, check the required kubernetes version
-# https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#prerequisites
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
+# Source: devops-test/charts/eck/templates/eck-operator.yml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-  name: devops-chart-ingress-nginx-admission
-webhooks:
-  - name: validate.nginx.ingress.kubernetes.io
-    matchPolicy: Equivalent
-    rules:
-      - apiGroups:
-          - networking.k8s.io
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          - ingresses
-    failurePolicy: Fail
-    sideEffects: None
-    admissionReviewVersions:
-      - v1
-      - v1beta1
-    clientConfig:
-      service:
-        namespace: "polo"
-        name: devops-chart-ingress-nginx-controller-admission
-        path: /networking/v1beta1/ingresses
+  name: my-elastic-cloud-eck
+  namespace: operators
+spec:
+  channel: stable
+  name: elastic-cloud-eck
+  source: operatorhubio-catalog
+  sourceNamespace: olm
 

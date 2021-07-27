@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: beat-config
-data:
-  filebeat.yml: |
-{{ .Files.Get "filebeat.yml" | indent 4 }}

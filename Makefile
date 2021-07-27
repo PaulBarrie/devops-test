@@ -16,9 +16,15 @@ DOCKER_TAG=latest
 
 CHART_NAME=devops-chart
 CHART_FOLDER=helm-chart
+CHART_RELEASE=0.1.0
 
 DNS_SOLVER=dns01-solver
-PROJECT_ID=winged-ratio-312113
+PROJECT_ID=terraform-test-319307
+CLUSTER_NAME=demo-cluster
+CLUSTER_ZONE=europe-west1
+DOMAIN_NAME=quelle-indignite.com
+NAMESPACE=polo
+
 default: help;   # default target
 
 help: ## display commands help
@@ -61,9 +67,11 @@ rm: ## Start all components
 .PHONY: rm
 
 # Kubernetes
-ingress-controller: ##
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.34.1/deploy/static/provider/baremetal/deploy.yaml
-.PHONY: ingress-controller
+install-nginx: ##
+	helm repo add nginx-stable https://helm.nginx.com/stable
+	helm repo update
+	helm install my-release nginx-stable/nginx-ingress
+.PHONY: install-nginx
 
 apply-kube:
 	kubectl apply -f ./kubernetes
@@ -82,23 +90,78 @@ package-chart:
 	helm package --dependency-update $(CHART_FOLDER) 
 .PHONY: package-chart
 
+vendor-chart:
+	helm upgrade --install $(CHART_RELEASE) $(CHART_FOLDER)
+
 install-chart: ## 
 	$(MAKE) package-chart $(CHART_FOLDER)
-	helm install --atomic $(CHART_NAME) $(CHART_FOLDER)
+	helm install  $(CHART_NAME) $(CHART_FOLDER)
 .PHONY: install-chart
 
-helm-debug:
+debug-chart:
 	$(MAKE) clear-chart
 	$(MAKE) uninstall-chart
 	$(MAKE) package-chart
 	helm install --dry-run --debug $(CHART_NAME) $(CHART_FOLDER) > logs
-.PHONY: helm-debug
+.PHONY: debug-chart
 
 template-chart: ## helm template commands
 	$(MAKE) clear-chart
 	$(MAKE) package-chart
 	helm template --debug $(CHART_NAME) devops-test-0.1.0.tgz > test.yaml
 .PHONY: template
+
+install-cert-manager:
+	helm repo add jetstack https://charts.jetstack.io
+	helm repo update
+	helm install cert-manager jetstack/cert-manager \
+	--namespace cert-manager --create-namespace \
+    --set extraArgs='{--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=8.8.8.8:53\\,1.1.1.1:53}' \
+	--set installCRDs=true \
+	--version v1.4.1
+.PHONY: install-cert-manager
+
+install-eck-chart:
+	kubectl apply -f https://download.elastic.co/downloads/eck/1.0.1/all-in-one.yaml
+.PHONY: install-eck-chart
+
+install-olm:
+	kubectl -n $(NAMESPACE) apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.14.1/olm.yaml
+.PHONY: install-olm
+
+install-kubed:
+	helm repo add appscode https://charts.appscode.com/stable/
+	helm repo update
+	helm install kubed appscode/kubed \
+  	--version v0.12.0 \
+  	--namespace kube-system
+.PHONY: install-kubed
+
+install-cas:
+	kubectl -n cert-manager apply -f https://github.com/jetstack/google-cas-issuer/releases/download/v0.5.2/google-cas-issuer-v0.5.2.yaml
+.PHONY: install-cas
+
+install-dep-helm: install-eck-chart install-olm install-cert-manager
+.PHONY: install-dep-helm
+
+
+# SSL related
+#https://github.com/acmesh-official/acme.sh
+issue-cert:
+	acme.sh --issue -d $(DOMAIN_NAME) -d "www.$(DOMAIN_NAME)" -d "kibana.$(DOMAIN_NAME)" -w $(pwd)/certs/$(DOMAIN_NAME)
+.phony: issue-cert
+
+gcp-auth:
+	gcloud auth login
+.PHONY: gcp-auth
+
+gcp-login-cluster:
+	gcloud container clusters --region $(CLUSTER_ZONE) get-credentials $(CLUSTER_NAME)
+.PHONY: gcp-login-cluster
+
+gcp-set-project:
+	gcloud config set project $(PROJECT_ID)
+.PHONY: gcp-set-project
 
 # https://cert-manager.io/docs/configuration/acme/dns01/google/
 gcp-service-account:
@@ -109,3 +172,4 @@ gcp-create-key-svc-account:
 	gcloud iam service-accounts keys create $(CHART_FOLDER)/subcharts/templates/uploader-app/key.json \
    --iam-account $(DNS_SOLVER)@$(PROJECT_ID).iam.gserviceaccount.com
 .PHONY: gcp-create-key-svc-account
+

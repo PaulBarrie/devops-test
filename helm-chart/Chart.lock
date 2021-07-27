@@ -1,12 +1,12 @@
 dependencies:
-- name: uploader-app
-  repository: file://subcharts/uploader-app
+- name: app
+  repository: file://subcharts/app
   version: 0.1.0
 - name: mongo
   repository: file://subcharts/mongo
   version: 0.1.0
-- name: logstash
-  repository: https://helm.elastic.co
-  version: 7.13.3
-digest: sha256:b30146ba1fe577a27d875617f457dfcd125baf4006962b9061db2d7413cabe1f
-generated: "2021-07-20T14:53:05.348007428+02:00"
+- name: elk
+  repository: file://subcharts/elk
+  version: 1.16.0
+digest: sha256:58b449e39a28b6474a0303ccfd948ae88bb1e9dd286964503316cd6551b55d9b
+generated: "2021-07-30T15:49:32.802904754+02:00"

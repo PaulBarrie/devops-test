@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: fluentd
+ namespace: {{ .Values.global.namespace }}
+ labels:
+   k8s-app: fluentd-logging 
+   version: v1
+spec:
+ selector:
+   matchLabels:
+     k8s-app: fluentd-logging
+     version: v1
+ template:
+   metadata:
+     labels:
+       k8s-app: fluentd-logging # This label will help group your daemonset pods
+       version: v1
+   spec:
+     tolerations:
+     - key: node-role.kubernetes.io/master
+       effect: NoSchedule # This will ensure fluentd collects master logs too
+     containers:
+     - name: fluentd
+       image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
+       env:
+        {{- with .Values.elasticsearch }}
+         - name:  FLUENT_ELASTICSEARCH_HOST
+           value: {{ $.Values.elasticsearch.host }} # Or the host of your elasticsearch server
+         - name:  FLUENT_ELASTICSEARCH_PORT
+           value: {{ $.Values.elasticsearch.port }} # The port that your elasticsearch API is exposed on
+         - name: FLUENT_ELASTICSEARCH_SCHEME
+           value: {{ $.Values.elasticsearch.protocol }} # Either HTTP or HTTPS.
+        {{- end }}
+        {{- with .Values.elasticsearch.secrets}}
+         - name: FLUENT_ELASTICSEARCH_USER
+           value: {{ $.Values.elasticsearch.secrets.username }}  # The username you've set up for elasticsearch
+         - name: FLUENT_ELASTICSEARCH_PASSWORD
+           value: {{ $.Values.elasticsearch.secrets.password }} 
+        {{- end }}
+       resources:
+         limits:
+           memory: 200Mi
+         requests:
+           cpu: 100m
+           memory: 200Mi
+       volumeMounts:
+       - name: varlog
+         mountPath: /var/log
+       - name: varlibdockercontainers
+         mountPath: /var/lib/docker/containers
+         readOnly: true
+     terminationGracePeriodSeconds: 30
+     volumes:
+     - name: varlog
+       hostPath:
+         path: /var/log
+     - name: varlibdockercontainers
+       hostPath:
+         path: /var/lib/docker/containers

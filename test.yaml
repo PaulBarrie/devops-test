@@ -1,34 +1,61 @@
 ---
-# Source: devops-test/charts/logstash/templates/poddisruptionbudget.yaml
+# Source: devops-test/charts/elk/charts/es-client/templates/poddisruptionbudget.yaml
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-  name: "devops-chart-logstash-pdb"
-  labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
-    heritage: "Helm"
-    release: "devops-chart"
+  name: "elasticsearch-client-pdb"
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: "devops-chart-logstash"
+      app: "elasticsearch-client"
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-serviceaccount.yaml
+# Source: devops-test/charts/elk/charts/es-data/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "elasticsearch-data-pdb"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: "elasticsearch-data"
+---
+# Source: devops-test/charts/elk/charts/es-master/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "elasticsearch-master-pdb"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: "elasticsearch-master"
+---
+# Source: devops-test/charts/elk/templates/service-account.yml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
+  name: fluentd
   namespace: polo
-automountServiceAccountToken: true
+  labels:
+    app: fluentd
+---
+# Source: devops-test/templates/service-account.yml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: sa-google-cas-issuer@terraform-test-319307.iam.gserviceaccount.com
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"ServiceAccount","metadata":{"annotations":{},"name":"ksa-google-cas-issuer","namespace":"cert-manager"}}
+  name: ksa-google-cas-issuer
+  namespace: cert-manager
+  resourceVersion: "2029760"
+  selfLink: /api/v1/namespaces/cert-manager/serviceaccounts/ksa-google-cas-issuer
+  uid: cf2cec84-a5b4-4402-be8d-395561ade6c6
+secrets:
+- name: ksa-google-cas-issuer-token
 ---
 # Source: devops-test/templates/secrets.yaml
 apiVersion: v1
@@ -44,20 +71,64 @@ metadata:
   name: mongo-secret
   namespace: polo
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-configmap.yaml
+# Source: devops-test/templates/secrets.yaml
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
-  namespace: polo
+kind: Secret
 data:
+  gcp-key.json: ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAidGVycmFmb3JtLXRlc3QtMzE5MzA3IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiNjgyNzRlYTkwMDAzYWFkZjg2MmQxOTg3NDAwYTMxM2ZhZjFiOGJkNCIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZRSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS2N3Z2dTakFnRUFBb0lCQVFDWmFNMlMvdTJHcFZjUFxudm1YbStFUWNIOXNJR2RSNTVMOVhMcnVibHhFTlBpbW1XcjViVDg4ZFVvdkJxWEc0dWVqVVFyeVZQV1NtWHBEOFxuOE1aT1BnaVdCa2g4aEhPeU84RE5FcWFQMmVBdUhLWHBuOTlSUDQ5ZWIrSGpNYy95ZGk4RjdLaG1qTnhTUGl5MVxuSStXbHE1MUJpUjJvTFhIbGllWWFaZVlSUnNRNWFBNEovOUR6VXU4aGF0cmw5MGYxcGlQdklGWnhYZmpuSU0yQlxuL1ludkdBNzRJL1VjOEpjZzRhdXNZMlVGSW1PVTd2VjdYWFBLbE16UXFCN2tJMTNjZlJwL1BZN3crQkxwaCsxUFxueERMbHV6MFVLNHdLdUVWWmVJSnBmendmdkorK0MvTlhRTVR4Zm5uaWlIdzltUE1FTFM5WGR1M243YU5XR2JncFxuNTFtamJUYk5BZ01CQUFFQ2dnRUFHa3o3TjVrZ21FMjI2aUpTbnFGUUxnRXhJRWVyWTVWNXoyVFo4YkFaMG9zbVxuZ1ZoNzI3UklWaWJkZ245K0dYVTRDMUlBdWxaYTcrSDFHZ1JlZnpJSDcwNlc5VkFROU16bFBsTlUvb01VT2R1YlxuL3p4elFSNzBRYlROUlpIMzdJSGlDSEk5SWMzREJRK1hReHZySm5iUVlGaTFYcXloNHdBOEZLa0ZJMCtlV3hmdFxubkRONklrY09PejZNWEhLd0pMRDQ5aXByNEE0c2dTVDJzUGxzV3RXS1M1YTZMNU9BaUQvMGlPNjU3UjJvTmp6TVxuSExSUEdlcHBrdUFGZVFGMGg0dFRjK1BuQXd2djduSDZpZktwMmt3RjFGZHVzS0dTaEFLeGJ3YzRoKzVBUVpvdlxuRHo3dTBVVjJ4ZFZQUSs5LzNkNUgxVkR4U2xiMFMzbzdFY1NWNjJZZTJRS0JnUURMcWR1MlpqQXpFZGNpVWlpWFxuNm9UZitITkcwNVRzWVFsNS9KQlcvcjNpaTU0N3lJNUI0Q0cxbUc4SmN6czJ4ZmlQTVlobXFZbzVJS3FOdXpLZ1xuVEdLRk5MM0hlViszeVNxQUtjNng1d2V0UG9yaGFBTGNHZC82M2xXUTQ3Vmg0Zi94VUdENFA2aTdSSit6clNnY1xua2xoOEpQVVdWR0U2Z1l0eFUyb0pCeUkwcVFLQmdRREExUEYvWWpZU216ZGlmM2llRWI4RmM0M3JZa3RMYjRwOFxuOWpabWtYVWhWNURkYmlrUDJmK0VnQXlhZ1F2ZUdLenlMMGRlN20vVFRQcUkwMjZmb3JYcWZuMmp3UFpOWTkybVxuMXhBM3EzMW45d0EwNGwrcmhzSVlYNWI1ekNJZmZFN2pURWdLNURkZENTcENCeTV4VkpiakVLMXRId01TeCtNVlxudmovQ0xnYmpoUUtCZ0JWZnlEMUdVRHlyM0tZdmRTOHNYN0dadzQ5bFdUWE5vVTc2SUxQZ25GRVFVaFQ0SVdYc1xuZmQwdkdFZ25uY2xMMGFCRmxJa2h0ZTMwN2JGZU9odjBxRXBPbExSQW1ya1JGYkxKc0hXZlI0RDVGVjQrcWo0clxuUVFSMUhRbk52QlYvd0hxMDh0aGE1Znh4WVVsY0hOK1N4RktURmwyM2tWU3dqOC9lN3p2dlVibXhBb0dCQUxydVxuczU0MWF3M21nbTV0L0ZQZ0NEb1VwMFBFYWhHYTg3bm9SUnh4YmdjQWlHTGdZOVlHRXZvejJBUC9qYTJrWmlQeFxuU1ZMeCtsM3doZjhXV0d0UXBPSEo5YXBGYVgva2kvOHRCWCt5TTBRUjRwVmh6alROMG1NbVo0bUpKcHMzT3BLR1xuWkdDS2xGRVFqWEtzMjR6cDM4d0hZdGdoOUN6RXNaTm1keENhNWZxeEFvR0FUQVhPb2ZEUWwxWVh3dy82VkFnVVxuNXVtVEUzK1pLSXdqcWhBWFI0aHZPV0xUQlUrVlRsbDVJcUdHZ1Q1Vm55NTgyL2dFUS9wS1JGOWdEMVpXL0tWN1xuQTNxUUs1ang0UC9Vak5RaFI4V0hldnB4VFVlZTRVVVdwY0g3L25ZR1hSRmY5bmxpc1dMSEJwVGFXU1VZTXh2N1xuVlBNYkhNYXcrZ1g1TDc1TGk2RFNmamc9XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAic2EtZ29vZ2xlLWNhcy1pc3N1ZXJAdGVycmFmb3JtLXRlc3QtMzE5MzA3LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAiY2xpZW50X2lkIjogIjEwNTgyNzU2MTI5MDQ3MjU1ODM2OSIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwKICAiYXV0aF9wcm92aWRlcl94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL29hdXRoMi92MS9jZXJ0cyIsCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvc2EtZ29vZ2xlLWNhcy1pc3N1ZXIlNDB0ZXJyYWZvcm0tdGVzdC0zMTkzMDcuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iCn0K
+metadata:
+  creationTimestamp: "2021-07-26T09:59:58Z"
+  name: googlesa
+  namespace: cert-manager
+  resourceVersion: "674402"
+  selfLink: /api/v1/namespaces/polo/secrets/googlesa
+  uid: 119d5398-369e-4a68-abb0-b454c17281c8
+type: Opaque
+
+# ---
+# apiVersion: v1
+# data:
+#   cert: ICAgICAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KICAgIE1JSURLakNDQWhLZ0F3SUJBZ0lRTnNMYjZZK2lJSXE1SzYvTjBhZVM5ekFOQmdrcWhraUc5dzBCQVFzRkFEQXYKICAgIE1TMHdLd1lEVlFRREV5UmtaV0V5T0RabU5TMDROMkV6TFRSaE4yVXRPVEEyT0Mxa1pESXhNMlJoWWpneE1tSXcKICAgIEhoY05NakV3TnpJMU1EZ3pOek14V2hjTk1qWXdOekkwTURrek56TXhXakF2TVMwd0t3WURWUVFERXlSa1pXRXkKICAgIE9EWm1OUzA0TjJFekxUUmhOMlV0T1RBMk9DMWtaREl4TTJSaFlqZ3hNbUl3Z2dFaU1BMEdDU3FHU0liM0RRRUIKICAgIEFRVUFBNElCRHdBd2dnRUtBb0lCQVFDcWtQV0UyWFlyU1diYnN4c3BibU5SYVBncTloYzVZekJOcnJScTlVMkoKICAgIHFqNW5UNlVNSzJHTU41V3o2bldOaEVWZUV0VE9jNUlHQUYvM296SkIyVnBwTExQYVR6VGoxUTFFZXJnMjZBUGMKICAgIENLUnhnZ0NjLzVXUFZpRStiZVlHa2E2aHJaL1NXYWdxQisvVS80eVQrbVNWU0NVRlg5SkVLUWU3eCtoam10eDcKICAgIE10M3N4d0FKMkFDTVZJZFIzWkZVdGN1c1NtaXF1SEpXTzdmN0xGclVqZkJhVTdaa1BhZGlmaDljVEVkZGN4aDIKICAgIFdaWnBBeElIclVkeU1pV1o3NlJaVGhNd3FibVFySFNZcWpncjJTVitsK0JiNTB2dVFYU1AyZXFJVEJTWmdndnUKICAgIG02NU9aaXVYNm0yNjdWWlcwd0xOZHozcEIrQTl1RnhyRkxnVWR1aGdZR3lwQWdNQkFBR2pRakJBTUE0R0ExVWQKICAgIER3RUIvd1FFQXdJQ0JEQVBCZ05WSFJNQkFmOEVCVEFEQVFIL01CMEdBMVVkRGdRV0JCUUhCeXNnTG9ONDI1TkkKICAgIGlJcHE2bm01dWhQQnF6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFHM0F2bmVoMGhVU1lBZWtaY1JYTXhKREMKICAgIHQ4TFJ6WmFMS2NkSUxzSFZxVkNCQXFSNDgweVczbEg4NWtrT0lqbGFWdEtpd1Jwb3RtNnJ0V2JZUXpPcDdqU0QKICAgIEhRVSs3Sktrczg3UWVxbGJZeTdXakZRY2hUZnY2eGpPYlIrL0ZDSTkzQlVyT3dZS1I0YVJzRXRWcjZGb1pTbisKICAgIEFweTdjU0x0dEtOcjN5OElqTSt3ZzcrM0U3OGZPaldtVVhqU1hFUVpFUjd2Z1FESmtkQ281dGpiYmlFa2RPeUoKICAgIENHZ2tOWGY4SXhvR0dGOG1uWW5mWlBQOVJlK21vdlJTdWhobXpIYWpkaDZsazBSTExITWV3L2d6ZzlHZjBjc3oKICAgIDBaRWRRSVBVemNhWHl1bXFUcHd1bDRUaDhFQ1BXMG82b29NamVzY2gyWDc2V2xNM0N0YWdvd2pNbHBsU1VnPT0KICAgIC0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0g
+# kind: Secret
+# metadata:
+#   creationTimestamp: null
+#   name: certificate-tls
+---
+# Source: devops-test/templates/secrets.yaml
+apiVersion: v1
+data:
+  gcp-key.json: ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAidGVycmFmb3JtLXRlc3QtMzE5MzA3IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiNjgyNzRlYTkwMDAzYWFkZjg2MmQxOTg3NDAwYTMxM2ZhZjFiOGJkNCIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZRSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS2N3Z2dTakFnRUFBb0lCQVFDWmFNMlMvdTJHcFZjUFxudm1YbStFUWNIOXNJR2RSNTVMOVhMcnVibHhFTlBpbW1XcjViVDg4ZFVvdkJxWEc0dWVqVVFyeVZQV1NtWHBEOFxuOE1aT1BnaVdCa2g4aEhPeU84RE5FcWFQMmVBdUhLWHBuOTlSUDQ5ZWIrSGpNYy95ZGk4RjdLaG1qTnhTUGl5MVxuSStXbHE1MUJpUjJvTFhIbGllWWFaZVlSUnNRNWFBNEovOUR6VXU4aGF0cmw5MGYxcGlQdklGWnhYZmpuSU0yQlxuL1ludkdBNzRJL1VjOEpjZzRhdXNZMlVGSW1PVTd2VjdYWFBLbE16UXFCN2tJMTNjZlJwL1BZN3crQkxwaCsxUFxueERMbHV6MFVLNHdLdUVWWmVJSnBmendmdkorK0MvTlhRTVR4Zm5uaWlIdzltUE1FTFM5WGR1M243YU5XR2JncFxuNTFtamJUYk5BZ01CQUFFQ2dnRUFHa3o3TjVrZ21FMjI2aUpTbnFGUUxnRXhJRWVyWTVWNXoyVFo4YkFaMG9zbVxuZ1ZoNzI3UklWaWJkZ245K0dYVTRDMUlBdWxaYTcrSDFHZ1JlZnpJSDcwNlc5VkFROU16bFBsTlUvb01VT2R1YlxuL3p4elFSNzBRYlROUlpIMzdJSGlDSEk5SWMzREJRK1hReHZySm5iUVlGaTFYcXloNHdBOEZLa0ZJMCtlV3hmdFxubkRONklrY09PejZNWEhLd0pMRDQ5aXByNEE0c2dTVDJzUGxzV3RXS1M1YTZMNU9BaUQvMGlPNjU3UjJvTmp6TVxuSExSUEdlcHBrdUFGZVFGMGg0dFRjK1BuQXd2djduSDZpZktwMmt3RjFGZHVzS0dTaEFLeGJ3YzRoKzVBUVpvdlxuRHo3dTBVVjJ4ZFZQUSs5LzNkNUgxVkR4U2xiMFMzbzdFY1NWNjJZZTJRS0JnUURMcWR1MlpqQXpFZGNpVWlpWFxuNm9UZitITkcwNVRzWVFsNS9KQlcvcjNpaTU0N3lJNUI0Q0cxbUc4SmN6czJ4ZmlQTVlobXFZbzVJS3FOdXpLZ1xuVEdLRk5MM0hlViszeVNxQUtjNng1d2V0UG9yaGFBTGNHZC82M2xXUTQ3Vmg0Zi94VUdENFA2aTdSSit6clNnY1xua2xoOEpQVVdWR0U2Z1l0eFUyb0pCeUkwcVFLQmdRREExUEYvWWpZU216ZGlmM2llRWI4RmM0M3JZa3RMYjRwOFxuOWpabWtYVWhWNURkYmlrUDJmK0VnQXlhZ1F2ZUdLenlMMGRlN20vVFRQcUkwMjZmb3JYcWZuMmp3UFpOWTkybVxuMXhBM3EzMW45d0EwNGwrcmhzSVlYNWI1ekNJZmZFN2pURWdLNURkZENTcENCeTV4VkpiakVLMXRId01TeCtNVlxudmovQ0xnYmpoUUtCZ0JWZnlEMUdVRHlyM0tZdmRTOHNYN0dadzQ5bFdUWE5vVTc2SUxQZ25GRVFVaFQ0SVdYc1xuZmQwdkdFZ25uY2xMMGFCRmxJa2h0ZTMwN2JGZU9odjBxRXBPbExSQW1ya1JGYkxKc0hXZlI0RDVGVjQrcWo0clxuUVFSMUhRbk52QlYvd0hxMDh0aGE1Znh4WVVsY0hOK1N4RktURmwyM2tWU3dqOC9lN3p2dlVibXhBb0dCQUxydVxuczU0MWF3M21nbTV0L0ZQZ0NEb1VwMFBFYWhHYTg3bm9SUnh4YmdjQWlHTGdZOVlHRXZvejJBUC9qYTJrWmlQeFxuU1ZMeCtsM3doZjhXV0d0UXBPSEo5YXBGYVgva2kvOHRCWCt5TTBRUjRwVmh6alROMG1NbVo0bUpKcHMzT3BLR1xuWkdDS2xGRVFqWEtzMjR6cDM4d0hZdGdoOUN6RXNaTm1keENhNWZxeEFvR0FUQVhPb2ZEUWwxWVh3dy82VkFnVVxuNXVtVEUzK1pLSXdqcWhBWFI0aHZPV0xUQlUrVlRsbDVJcUdHZ1Q1Vm55NTgyL2dFUS9wS1JGOWdEMVpXL0tWN1xuQTNxUUs1ang0UC9Vak5RaFI4V0hldnB4VFVlZTRVVVdwY0g3L25ZR1hSRmY5bmxpc1dMSEJwVGFXU1VZTXh2N1xuVlBNYkhNYXcrZ1g1TDc1TGk2RFNmamc9XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAic2EtZ29vZ2xlLWNhcy1pc3N1ZXJAdGVycmFmb3JtLXRlc3QtMzE5MzA3LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAiY2xpZW50X2lkIjogIjEwNTgyNzU2MTI5MDQ3MjU1ODM2OSIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwKICAiYXV0aF9wcm92aWRlcl94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL29hdXRoMi92MS9jZXJ0cyIsCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvc2EtZ29vZ2xlLWNhcy1pc3N1ZXIlNDB0ZXJyYWZvcm0tdGVzdC0zMTkzMDcuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iCn0K
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: clouddns-dns01
+---
+# Source: devops-test/templates/secrets.yaml
+apiVersion: v1
+data:
+  ca.crt: ''
+  tls.crt: ''
+  tls.key: ''
+kind: Secret
+metadata:
+  name: certificate-tls
+  namespace: cert-manager
+  annotations:
+    kubed.appscode.com/sync: "cert-manager-tls=polo" # Sync certificate to matching namespaces
+type: kubernetes.io/tls
+---
+# Source: devops-test/charts/app/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-claim
+  namespace: polo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
 ---
 # Source: devops-test/charts/mongo/templates/pvc.yaml
 apiVersion: v1
@@ -72,233 +143,225 @@ spec:
     requests:
       storage: 1Gi
 ---
-# Source: devops-test/charts/uploader-app/templates/pvc.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: uploads-claim
-  namespace: polo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/clusterrole.yaml
+# Source: devops-test/charts/elk/templates/cluster-role.yml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  name: fluentd
   labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-  name: devops-chart-ingress-nginx
+    app: fluentd
 rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - endpoints
-      - nodes
-      - pods
-      - secrets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses/status
-    verbs:
-      - update
-  - apiGroups:
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
+# Source: devops-test/charts/elk/templates/cluster-role.yml
 kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-  name: devops-chart-ingress-nginx
+  name: fluentd
 roleRef:
-  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: devops-chart-ingress-nginx
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
-  namespace: polo
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - pods
-      - secrets
-      - endpoints
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingresses/status
-    verbs:
-      - update
-  - apiGroups:
-      - "networking.k8s.io" # k8s 1.14+
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    resourceNames:
-      - ingress-controller-leader-nginx
-    verbs:
-      - get
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - create
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx
-  namespace: polo
-roleRef:
+  name: fluentd
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: devops-chart-ingress-nginx
 subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx
-    namespace: "polo"
+- kind: ServiceAccount
+  name: fluentd
+  namespace: polo
 ---
-# Source: devops-test/charts/logstash/templates/service-headless.yaml
+# Source: devops-test/charts/app/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: uploader-app
+  namespace: polo
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+spec:
+  selector:
+    app: uploader-app
+  type: LoadBalancer
+  ports:
+  - name: http
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+---
+# Source: devops-test/charts/elk/charts/es-client/templates/service.yaml
 kind: Service
 apiVersion: v1
 metadata:
-  name: "devops-chart-logstash-headless"
+  name: elasticsearch-client
   labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
     heritage: "Helm"
     release: "devops-chart"
+    chart: "es-client"
+    app: "elasticsearch-client"
+  annotations:
+    {}
 spec:
-  clusterIP: None
+  type: ClusterIP
   selector:
-    app: "devops-chart-logstash"
+    release: "devops-chart"
+    chart: "es-client"
+    app: "elasticsearch-client"
   ports:
-    - name: http
-      port: 9600
+  - name: http
+    protocol: TCP
+    port: 9200
+  - name: transport
+    protocol: TCP
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/es-client/templates/service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-client-headless
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-client"
+    app: "elasticsearch-client"
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None # This is needed for statefulset hostnames like elasticsearch-0 to resolve
+  # Create endpoints also if the related pod isn't ready
+  publishNotReadyAddresses: true
+  selector:
+    app: "elasticsearch-client"
+  ports:
+  - name: http
+    port: 9200
+  - name: transport
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/es-data/templates/service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-data
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-data"
+    app: "elasticsearch-data"
+  annotations:
+    {}
+spec:
+  type: ClusterIP
+  selector:
+    release: "devops-chart"
+    chart: "es-data"
+    app: "elasticsearch-data"
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9200
+  - name: transport
+    protocol: TCP
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/es-data/templates/service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-data-headless
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-data"
+    app: "elasticsearch-data"
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None # This is needed for statefulset hostnames like elasticsearch-0 to resolve
+  # Create endpoints also if the related pod isn't ready
+  publishNotReadyAddresses: true
+  selector:
+    app: "elasticsearch-data"
+  ports:
+  - name: http
+    port: 9200
+  - name: transport
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/es-master/templates/service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-master
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-master"
+    app: "elasticsearch-master"
+  annotations:
+    {}
+spec:
+  type: ClusterIP
+  selector:
+    release: "devops-chart"
+    chart: "es-master"
+    app: "elasticsearch-master"
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9200
+  - name: transport
+    protocol: TCP
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/es-master/templates/service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-master-headless
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-master"
+    app: "elasticsearch-master"
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None # This is needed for statefulset hostnames like elasticsearch-0 to resolve
+  # Create endpoints also if the related pod isn't ready
+  publishNotReadyAddresses: true
+  selector:
+    app: "elasticsearch-master"
+  ports:
+  - name: http
+    port: 9200
+  - name: transport
+    port: 9300
+---
+# Source: devops-test/charts/elk/charts/kibana/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-chart-kibana
+  labels: 
+    app: kibana
+    release: "devops-chart"
+    heritage: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 5601
+      protocol: TCP
+      name: http
+      targetPort: 5601
+  selector:
+    app: kibana
+    release: "devops-chart"
 ---
 # Source: devops-test/charts/mongo/templates/service.yaml
 apiVersion: v1
@@ -314,193 +377,62 @@ spec:
   selector:
     app: mongodb
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-service-webhook.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller-admission
-  namespace: polo
-spec:
-  type: ClusterIP
-  ports:
-    - name: https-webhook
-      port: 443
-      targetPort: webhook
-  selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/component: controller
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
-  namespace: polo
-spec:
-  type: LoadBalancer
-  ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: http
-    - name: https
-      port: 443
-      protocol: TCP
-      targetPort: https
-  selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/component: controller
----
-# Source: devops-test/charts/uploader-app/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: uploader-app
-  namespace: polo
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
-spec:
-  selector:
-    app: uploader-app
-  type: NodePort
-  ports:
-  - name: http
-    protocol: TCP
-    port: 3000
-    targetPort: 3000
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/controller-deployment.yaml
+# Source: devops-test/charts/elk/templates/daemonset.yml
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: controller
-  name: devops-chart-ingress-nginx-controller
+  name: fluentd
   namespace: polo
+  labels:
+    app: fluentd
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: ingress-nginx
-      app.kubernetes.io/instance: devops-chart
-      app.kubernetes.io/component: controller
-  replicas: 1
-  revisionHistoryLimit: 10
-  minReadySeconds: 0
+      app: fluentd
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/component: controller
+        app: fluentd
     spec:
-      dnsPolicy: ClusterFirst
+      serviceAccount: fluentd
+      serviceAccountName: fluentd
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       containers:
-        - name: controller
-          image: "k8s.gcr.io/ingress-nginx/controller:v0.47.0@sha256:a1e4efc107be0bb78f32eaec37bef17d7a0c81bec8066cdf2572508d21351d0b"
-          imagePullPolicy: IfNotPresent
-          lifecycle: 
-            preStop:
-              exec:
-                command:
-                - /wait-shutdown
-          args:
-            - /nginx-ingress-controller
-            - --publish-service=$(POD_NAMESPACE)/devops-chart-ingress-nginx-controller
-            - --election-id=ingress-controller-leader
-            - --ingress-class=nginx
-            - --configmap=$(POD_NAMESPACE)/devops-chart-ingress-nginx-controller
-            - --validating-webhook=:8443
-            - --validating-webhook-certificate=/usr/local/certificates/cert
-            - --validating-webhook-key=/usr/local/certificates/key
-          securityContext:
-            capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            runAsUser: 101
-            allowPrivilegeEscalation: true
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: LD_PRELOAD
-              value: /usr/local/lib/libmimalloc.so
-          livenessProbe: 
-            failureThreshold: 5
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe: 
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-            - name: https
-              containerPort: 443
-              protocol: TCP
-            - name: webhook
-              containerPort: 8443
-              protocol: TCP
-          volumeMounts:
-            - name: webhook-cert
-              mountPath: /usr/local/certificates/
-              readOnly: true
-          resources: 
-            requests:
-              cpu: 100m
-              memory: 90Mi
-      nodeSelector: 
-        kubernetes.io/os: linux
-      serviceAccountName: devops-chart-ingress-nginx
-      terminationGracePeriodSeconds: 300
+      - name: fluentd
+        image: fluent/fluentd-kubernetes-daemonset:v1.4.2-debian-elasticsearch-1.1
+        env:
+          - name:  FLUENT_ELASTICSEARCH_HOST
+            value: elasticsearch-client
+          - name:  FLUENT_ELASTICSEARCH_PORT
+            value: "9200"
+          - name: FLUENT_ELASTICSEARCH_SCHEME
+            value: "http"
+          - name: FLUENTD_SYSTEMD_CONF
+            value: disable
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      terminationGracePeriodSeconds: 30
       volumes:
-        - name: webhook-cert
-          secret:
-            secretName: devops-chart-ingress-nginx-admission
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
 ---
-# Source: devops-test/charts/uploader-app/templates/deployment.yaml
+# Source: devops-test/charts/app/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 
@@ -510,7 +442,7 @@ metadata:
     app: uploader
   namespace: polo
 spec:
-  replicas: 1  #  1
+  replicas: 1
   selector:
     matchLabels:
       app: uploader-app
@@ -529,78 +461,165 @@ spec:
           - containerPort: 3000
         resources:
           limits:
-            cpu: 0.5
-            memory: 300Mi
+                cpu: "0.5"
+                memory: 300Mi
           requests:
-            cpu: 0.5
-            memory: 300Mi
+                cpu: "0.5"
+                memory: 300Mi
         volumeMounts:
           - name: uploaded
             mountPath: /usr/app/src/uploaded
         envFrom:
         - secretRef:
             name: mongo-secret
-      - name: logstash
-        image: maanadev/logstash:6.5.3-custom
-        volumeMounts:
-        - name: shared-logs
-          mountPath: /usr/share/logstash/mylogs/
-        - name: logstash-yml
-          mountPath: /usr/share/logstash/config/logstash.yml
-          subPath: logstash.yml
-        - name: logstash-conf
-          mountPath: /usr/share/logstash/pipeline/logstash.conf
-          subPath: logstash.conf
-        env:
-        - name: NODE_ID
-          value: "uploader-app"
-        - name: NODE_IP
-          valueFrom:
-            fieldRef:
-             fieldPath: status.podIP
-        
+      # - name: filebeat
+      #   image: elastic/filebeat:7.8.0
+      #   env:
+      #   - name: LOGSTASH_HOSTS
+      #     value: 34.142.1.110:31998
+      #   args: [
+      #     "-c", "/etc/filebeat/filebeat.yml",
+      #     "-e"
+      #   ]
+      #   volumeMounts:
+      #   - name: log-output
+      #     mountPath: /tmp/
+      #   - name: beat-config
+      #     mountPath: /etc/filebeat/
       volumes:
-      - name: uploaded
-        persistentVolumeClaim:
-          claimName: uploads-claim
-      - name: shared-logs
-        emptyDir: {}
-      - name: logstash-yml
-        configMap:
-          name: logstash-yml
-      - name: logstash-conf
-        configMap:
-          name: logstash-conf
+        - name: uploaded
+          persistentVolumeClaim:
+            claimName: uploads-claim
+      #   - name: log-output
+      #     emptyDir: {}
+      #   - name: beat-config
+      #     configMap:
+      #       name: beat-config
+      #       items:
+      #       - key: filebeat.yml
+      #         path: filebeat.yml
 ---
-# Source: devops-test/charts/logstash/templates/statefulset.yaml
+# Source: devops-test/charts/elk/charts/kibana/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-chart-kibana
+  labels: 
+    app: kibana
+    release: "devops-chart"
+    heritage: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kibana
+      release: "devops-chart"
+  template:
+    metadata:
+      labels:
+        app: kibana
+        release: "devops-chart"
+      annotations:
+        
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      containers:
+      - name: kibana
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "docker.elastic.co/kibana/kibana:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        env:
+          - name: ELASTICSEARCH_HOSTS
+            value: "http://elasticsearch-client-headless:9200"
+          - name: SERVER_HOST
+            value: "0.0.0.0"
+          - name: NODE_OPTIONS
+            value: --max-old-space-size=1800
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+
+                # Disable nss cache to avoid filling dentry cache when calling curl
+                # This is required with Kibana Docker using nss < 3.52
+                export NSS_SDB_USE_CACHE=no
+
+                http () {
+                    local path="${1}"
+                    set -- -XGET -s --fail -L
+
+                    if [ -n "${ELASTICSEARCH_USERNAME}" ] && [ -n "${ELASTICSEARCH_PASSWORD}" ]; then
+                      set -- "$@" -u "${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}"
+                    fi
+
+                    STATUS=$(curl --output /dev/null --write-out "%{http_code}" -k "$@" "http://localhost:5601${path}")
+                    if [[ "${STATUS}" -eq 200 ]]; then
+                      exit 0
+                    fi
+
+                    echo "Error: Got HTTP code ${STATUS} but expected a 200"
+                    exit 1
+                }
+
+                http "/app/kibana"
+        ports:
+        - containerPort: 5601
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+        volumeMounts:
+---
+# Source: devops-test/charts/elk/charts/es-client/templates/statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: devops-chart-logstash
+  name: elasticsearch-client
   labels:
-    app: "devops-chart-logstash"
-    chart: "logstash"
     heritage: "Helm"
     release: "devops-chart"
+    chart: "es-client"
+    app: "elasticsearch-client"
+  annotations:
+    esMajorVersion: "7"
 spec:
-  serviceName: devops-chart-logstash-headless
+  serviceName: elasticsearch-client-headless
   selector:
     matchLabels:
-      app: "devops-chart-logstash"
-      release: "devops-chart"
+      app: "elasticsearch-client"
   replicas: 1
   podManagementPolicy: Parallel
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
-      name: "devops-chart-logstash"
+      name: "elasticsearch-client"
       labels:
-        app: "devops-chart-logstash"
-        chart: "logstash"
-        heritage: "Helm"
         release: "devops-chart"
+        chart: "es-client"
+        app: "elasticsearch-client"
       annotations:
+        
     spec:
       securityContext:
         fsGroup: 1000
@@ -613,52 +632,492 @@ spec:
               - key: app
                 operator: In
                 values:
-                - "devops-chart-logstash"
+                - "elasticsearch-client"
             topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 120
       volumes:
+      enableServiceLinks: true
+      initContainers:
+      - name: configure-sysctl
+        securityContext:
+          runAsUser: 0
+          privileged: true
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        resources:
+          {}
+
       containers:
-      - name: "logstash"
+      - name: "es-client"
         securityContext:
           capabilities:
             drop:
             - ALL
           runAsNonRoot: true
           runAsUser: 1000
-        image: "docker.elastic.co/logstash/logstash:7.13.3"
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
         imagePullPolicy: "IfNotPresent"
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 300
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
         readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                # If the node is starting up wait for the cluster to be ready (request params: "wait_for_status=green&timeout=1s" )
+                # Once it has started only check that the node itself is responding
+                START_FILE=/tmp/.es_start_file
+
+                # Disable nss cache to avoid filling dentry cache when calling curl
+                # This is required with Elasticsearch Docker using nss < 3.52
+                export NSS_SDB_USE_CACHE=no
+
+                http () {
+                  local path="${1}"
+                  local args="${2}"
+                  set -- -XGET -s
+
+                  if [ "$args" != "" ]; then
+                    set -- "$@" $args
+                  fi
+
+                  if [ -n "${ELASTIC_USERNAME}" ] && [ -n "${ELASTIC_PASSWORD}" ]; then
+                    set -- "$@" -u "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}"
+                  fi
+
+                  curl --output /dev/null -k "$@" "http://127.0.0.1:9200${path}"
+                }
+
+                if [ -f "${START_FILE}" ]; then
+                  echo 'Elasticsearch is already running, lets check the node is healthy'
+                  HTTP_CODE=$(http "/" "-w %{http_code}")
+                  RC=$?
+                  if [[ ${RC} -ne 0 ]]; then
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with RC ${RC}"
+                    exit ${RC}
+                  fi
+                  # ready if HTTP code 200, 503 is tolerable if ES version is 6.x
+                  if [[ ${HTTP_CODE} == "200" ]]; then
+                    exit 0
+                  elif [[ ${HTTP_CODE} == "503" && "7" == "6" ]]; then
+                    exit 0
+                  else
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with HTTP code ${HTTP_CODE}"
+                    exit 1
+                  fi
+
+                else
+                  echo 'Waiting for elasticsearch cluster to become ready (request params: "wait_for_status=green&timeout=1s" )'
+                  if http "/_cluster/health?wait_for_status=green&timeout=1s" "--fail" ; then
+                    touch ${START_FILE}
+                    exit 0
+                  else
+                    echo 'Cluster is not yet ready (request params: "wait_for_status=green&timeout=1s" )'
+                    exit 1
+                  fi
+                fi
           failureThreshold: 3
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 60
+          initialDelaySeconds: 10
           periodSeconds: 10
           successThreshold: 3
           timeoutSeconds: 5
         ports:
         - name: http
-          containerPort: 9600
+          containerPort: 9200
+        - name: transport
+          containerPort: 9300
         resources:
           limits:
             cpu: 1000m
-            memory: 1536Mi
+            memory: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+        env:
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: discovery.seed_hosts
+            value: "elasticsearch-master-headless"
+          - name: cluster.name
+            value: "elasticsearch"
+          - name: network.host
+            value: "0.0.0.0"
+          - name: node.data
+            value: "false"
+          - name: node.ingest
+            value: "false"
+          - name: node.master
+            value: "false"
+          - name: node.ml
+            value: "true"
+          - name: node.remote_cluster_client
+            value: "true"
+        volumeMounts:
+---
+# Source: devops-test/charts/elk/charts/es-data/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch-data
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-data"
+    app: "elasticsearch-data"
+  annotations:
+    esMajorVersion: "7"
+spec:
+  serviceName: elasticsearch-data-headless
+  selector:
+    matchLabels:
+      app: "elasticsearch-data"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+  template:
+    metadata:
+      name: "elasticsearch-data"
+      labels:
+        release: "devops-chart"
+        chart: "es-data"
+        app: "elasticsearch-data"
+      annotations:
+        
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "elasticsearch-data"
+            topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      volumes:
+      enableServiceLinks: true
+      initContainers:
+      - name: configure-sysctl
+        securityContext:
+          runAsUser: 0
+          privileged: true
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        resources:
+          {}
+
+      containers:
+      - name: "es-data"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                # If the node is starting up wait for the cluster to be ready (request params: "wait_for_status=green&timeout=1s" )
+                # Once it has started only check that the node itself is responding
+                START_FILE=/tmp/.es_start_file
+
+                # Disable nss cache to avoid filling dentry cache when calling curl
+                # This is required with Elasticsearch Docker using nss < 3.52
+                export NSS_SDB_USE_CACHE=no
+
+                http () {
+                  local path="${1}"
+                  local args="${2}"
+                  set -- -XGET -s
+
+                  if [ "$args" != "" ]; then
+                    set -- "$@" $args
+                  fi
+
+                  if [ -n "${ELASTIC_USERNAME}" ] && [ -n "${ELASTIC_PASSWORD}" ]; then
+                    set -- "$@" -u "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}"
+                  fi
+
+                  curl --output /dev/null -k "$@" "http://127.0.0.1:9200${path}"
+                }
+
+                if [ -f "${START_FILE}" ]; then
+                  echo 'Elasticsearch is already running, lets check the node is healthy'
+                  HTTP_CODE=$(http "/" "-w %{http_code}")
+                  RC=$?
+                  if [[ ${RC} -ne 0 ]]; then
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with RC ${RC}"
+                    exit ${RC}
+                  fi
+                  # ready if HTTP code 200, 503 is tolerable if ES version is 6.x
+                  if [[ ${HTTP_CODE} == "200" ]]; then
+                    exit 0
+                  elif [[ ${HTTP_CODE} == "503" && "7" == "6" ]]; then
+                    exit 0
+                  else
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with HTTP code ${HTTP_CODE}"
+                    exit 1
+                  fi
+
+                else
+                  echo 'Waiting for elasticsearch cluster to become ready (request params: "wait_for_status=green&timeout=1s" )'
+                  if http "/_cluster/health?wait_for_status=green&timeout=1s" "--fail" ; then
+                    touch ${START_FILE}
+                    exit 0
+                  else
+                    echo 'Cluster is not yet ready (request params: "wait_for_status=green&timeout=1s" )'
+                    exit 1
+                  fi
+                fi
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        ports:
+        - name: http
+          containerPort: 9200
+        - name: transport
+          containerPort: 9300
+        resources:
+          limits:
+            cpu: 100m
+            memory: 6Gi
           requests:
             cpu: 100m
-            memory: 1536Mi
+            memory: 4Gi
         env:
-          - name: LS_JAVA_OPTS
-            value: "-Xmx1g -Xms1g"
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: discovery.seed_hosts
+            value: "elasticsearch-master-headless"
+          - name: cluster.name
+            value: "elasticsearch"
+          - name: network.host
+            value: "0.0.0.0"
+          - name: ES_JAVA_OPTS
+            value: "-Xmx2g -Xms2g"
+          - name: node.data
+            value: "true"
+          - name: node.ingest
+            value: "true"
+          - name: node.master
+            value: "false"
+          - name: node.ml
+            value: "true"
+          - name: node.remote_cluster_client
+            value: "true"
         volumeMounts:
+          - name: "elasticsearch-data"
+            mountPath: /usr/share/elasticsearch/data
+---
+# Source: devops-test/charts/elk/charts/es-master/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch-master
+  labels:
+    heritage: "Helm"
+    release: "devops-chart"
+    chart: "es-master"
+    app: "elasticsearch-master"
+  annotations:
+    esMajorVersion: "7"
+spec:
+  serviceName: elasticsearch-master-headless
+  selector:
+    matchLabels:
+      app: "elasticsearch-master"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-master
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 4Gi
+      storageClassName: standard
+  template:
+    metadata:
+      name: "elasticsearch-master"
+      labels:
+        release: "devops-chart"
+        chart: "es-master"
+        app: "elasticsearch-master"
+      annotations:
+        
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "elasticsearch-master"
+            topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      volumes:
+      enableServiceLinks: true
+      initContainers:
+      - name: configure-sysctl
+        securityContext:
+          runAsUser: 0
+          privileged: true
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        resources:
+          {}
+
+      containers:
+      - name: "es-master"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+        imagePullPolicy: "IfNotPresent"
+        readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                # If the node is starting up wait for the cluster to be ready (request params: "wait_for_status=green&timeout=1s" )
+                # Once it has started only check that the node itself is responding
+                START_FILE=/tmp/.es_start_file
+
+                # Disable nss cache to avoid filling dentry cache when calling curl
+                # This is required with Elasticsearch Docker using nss < 3.52
+                export NSS_SDB_USE_CACHE=no
+
+                http () {
+                  local path="${1}"
+                  local args="${2}"
+                  set -- -XGET -s
+
+                  if [ "$args" != "" ]; then
+                    set -- "$@" $args
+                  fi
+
+                  if [ -n "${ELASTIC_USERNAME}" ] && [ -n "${ELASTIC_PASSWORD}" ]; then
+                    set -- "$@" -u "${ELASTIC_USERNAME}:${ELASTIC_PASSWORD}"
+                  fi
+
+                  curl --output /dev/null -k "$@" "http://127.0.0.1:9200${path}"
+                }
+
+                if [ -f "${START_FILE}" ]; then
+                  echo 'Elasticsearch is already running, lets check the node is healthy'
+                  HTTP_CODE=$(http "/" "-w %{http_code}")
+                  RC=$?
+                  if [[ ${RC} -ne 0 ]]; then
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with RC ${RC}"
+                    exit ${RC}
+                  fi
+                  # ready if HTTP code 200, 503 is tolerable if ES version is 6.x
+                  if [[ ${HTTP_CODE} == "200" ]]; then
+                    exit 0
+                  elif [[ ${HTTP_CODE} == "503" && "7" == "6" ]]; then
+                    exit 0
+                  else
+                    echo "curl --output /dev/null -k -XGET -s -w '%{http_code}' \${BASIC_AUTH} http://127.0.0.1:9200/ failed with HTTP code ${HTTP_CODE}"
+                    exit 1
+                  fi
+
+                else
+                  echo 'Waiting for elasticsearch cluster to become ready (request params: "wait_for_status=green&timeout=1s" )'
+                  if http "/_cluster/health?wait_for_status=green&timeout=1s" "--fail" ; then
+                    touch ${START_FILE}
+                    exit 0
+                  else
+                    echo 'Cluster is not yet ready (request params: "wait_for_status=green&timeout=1s" )'
+                    exit 1
+                  fi
+                fi
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        ports:
+        - name: http
+          containerPort: 9200
+        - name: transport
+          containerPort: 9300
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+        env:
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: cluster.initial_master_nodes
+            value: "elasticsearch-master-0,"
+          - name: discovery.seed_hosts
+            value: "elasticsearch-master-headless"
+          - name: cluster.name
+            value: "elasticsearch"
+          - name: network.host
+            value: "0.0.0.0"
+          - name: node.data
+            value: "false"
+          - name: node.ingest
+            value: "false"
+          - name: node.master
+            value: "true"
+          - name: node.ml
+            value: "true"
+          - name: node.remote_cluster_client
+            value: "true"
+        volumeMounts:
+          - name: "elasticsearch-master"
+            mountPath: /usr/share/elasticsearch/data
 ---
 # Source: devops-test/charts/mongo/templates/stateful-set.yaml
 apiVersion: apps/v1
@@ -706,7 +1165,7 @@ spec:
         persistentVolumeClaim:
           claimName: mongo-claim
 ---
-# Source: devops-test/charts/uploader-app/templates/ingress.yaml
+# Source: devops-test/templates/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -714,279 +1173,151 @@ metadata:
   namespace: polo
   annotations:
     kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: uploader-ip
-    networking.gke.io/managed-certificates: uploader-certificate
+    kubernetes.io/ingress.global-static-ip-name: quelleindignite
+    # cert-manager.io/issuer: "cert-issuer"
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/issue-temporary-certificate: "true"
 spec:
+  # tls:
+  # - hosts:
+  #   - quelle-indignite.com
+  #   secretName: certificate-tls
   rules: 
-    - host: 
+    - host: quelle-indignite.com
       http:
         paths:
-        - path: /*
+        - path: /*  
           pathType: Prefix
           backend:
             service:
               name: uploader-app
               port:
                 number: 3000
----
-# Source: devops-test/charts/uploader-app/templates/certificate.yaml
-apiVersion: networking.gke.io/v1beta1
-kind: ManagedCertificate
 
+
+
+
+# - host: "devops-chart-kibana.quelle-indignite.com"
+#   http:
+#     paths:
+#     - path: /*
+#       pathType: Prefix
+#       backend:
+#         service:
+#
+#           name: devops-chart-kibana
+#           port: 
+#             number: 5601
+#
+---
+# Source: devops-test/templates/cert-manager.yml
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: uploader-certificate
-  namespace: polo
+  name: certificate-tls
+  namespace: cert-manager
 spec:
-  domains:
-    - quelle-indignite.com
+  secretName: certificate-tls
+  issuerRef:
+    # The issuer created previously
+    kind: Issuer
+    name: cert-issuer
+  dnsNames:
+  - quelle-indignite.com
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/validating-webhook.yaml
-# before changing this value, check the required kubernetes version
-# https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#prerequisites
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
+# Source: devops-test/templates/cert-manager.yml
+apiVersion: cert-manager.io/v1
+kind: Issuer
 metadata:
+  name: cert-issuer
+  namespace: cert-manager
   labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-  name: devops-chart-ingress-nginx-admission
-webhooks:
-  - name: validate.nginx.ingress.kubernetes.io
-    matchPolicy: Equivalent
-    rules:
-      - apiGroups:
-          - networking.k8s.io
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          - ingresses
-    failurePolicy: Fail
-    sideEffects: None
-    admissionReviewVersions:
-      - v1
-      - v1beta1
-    clientConfig:
-      service:
-        namespace: "polo"
-        name: devops-chart-ingress-nginx-controller-admission
-        path: /networking/v1beta1/ingresses
+    app.kubernetes.io/component: issuer
+spec:
+  acme:
+    email: "sa-google-cas-issuer@terraform-test-319307.iam.gserviceaccount.com"
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      name: issuer-account-key
+    solvers:
+      - dns01:
+          cloudDNS:
+            # The ID of the GCP project
+            project: terraform-test-319307
+            # This is the secret used to access the service account
+            serviceAccountSecretRef:
+              name: googlesa
+              key: gcp-key.json
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/serviceaccount.yaml
+# Source: devops-test/charts/elk/charts/es-client/templates/test/test-elasticsearch-health.yaml
 apiVersion: v1
-kind: ServiceAccount
+kind: Pod
 metadata:
-  name: devops-chart-ingress-nginx-admission
-  namespace: polo
+  name: "devops-chart-rofuo-test"
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrole.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: devops-chart-ingress-nginx-admission
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-rules:
-  - apiGroups:
-      - admissionregistration.k8s.io
-    resources:
-      - validatingwebhookconfigurations
-    verbs:
-      - get
-      - update
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name:  devops-chart-ingress-nginx-admission
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: devops-chart-ingress-nginx-admission
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx-admission
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name:  devops-chart-ingress-nginx-admission
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
-      - create
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: devops-chart-ingress-nginx-admission
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: devops-chart-ingress-nginx-admission
-subjects:
-  - kind: ServiceAccount
-    name: devops-chart-ingress-nginx-admission
-    namespace: "polo"
----
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-createSecret.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: devops-chart-ingress-nginx-admission-create
-  namespace: polo
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
-  template:
-    metadata:
-      name: devops-chart-ingress-nginx-admission-create
-      labels:
-        helm.sh/chart: ingress-nginx-3.34.0
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/version: "0.47.0"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: admission-webhook
-    spec:
-      containers:
-        - name: create
-          image: "docker.io/jettech/kube-webhook-certgen:v1.5.1"
-          imagePullPolicy: IfNotPresent
-          args:
-            - create
-            - --host=devops-chart-ingress-nginx-controller-admission,devops-chart-ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
-            - --namespace=$(POD_NAMESPACE)
-            - --secret-name=devops-chart-ingress-nginx-admission
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-      restartPolicy: OnFailure
-      serviceAccountName: devops-chart-ingress-nginx-admission
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  containers:
+  - name: "devops-chart-icxpb-test"
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+    imagePullPolicy: "IfNotPresent"
+    command:
+      - "sh"
+      - "-c"
+      - |
+        #!/usr/bin/env bash -e
+        curl -XGET --fail 'elasticsearch-client:9200/_cluster/health?wait_for_status=green&timeout=1s'
+  restartPolicy: Never
 ---
-# Source: devops-test/charts/uploader-app/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-patchWebhook.yaml
-apiVersion: batch/v1
-kind: Job
+# Source: devops-test/charts/elk/charts/es-data/templates/test/test-elasticsearch-health.yaml
+apiVersion: v1
+kind: Pod
 metadata:
-  name: devops-chart-ingress-nginx-admission-patch
-  namespace: polo
+  name: "devops-chart-ezxik-test"
   annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-  labels:
-    helm.sh/chart: ingress-nginx-3.34.0
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/instance: devops-chart
-    app.kubernetes.io/version: "0.47.0"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: admission-webhook
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
-  template:
-    metadata:
-      name: devops-chart-ingress-nginx-admission-patch
-      labels:
-        helm.sh/chart: ingress-nginx-3.34.0
-        app.kubernetes.io/name: ingress-nginx
-        app.kubernetes.io/instance: devops-chart
-        app.kubernetes.io/version: "0.47.0"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: admission-webhook
-    spec:
-      containers:
-        - name: patch
-          image: "docker.io/jettech/kube-webhook-certgen:v1.5.1"
-          imagePullPolicy: IfNotPresent
-          args:
-            - patch
-            - --webhook-name=devops-chart-ingress-nginx-admission
-            - --namespace=$(POD_NAMESPACE)
-            - --patch-mutating=false
-            - --secret-name=devops-chart-ingress-nginx-admission
-            - --patch-failure-policy=Fail
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-      restartPolicy: OnFailure
-      serviceAccountName: devops-chart-ingress-nginx-admission
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  containers:
+  - name: "devops-chart-fkdmi-test"
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+    imagePullPolicy: "IfNotPresent"
+    command:
+      - "sh"
+      - "-c"
+      - |
+        #!/usr/bin/env bash -e
+        curl -XGET --fail 'elasticsearch-data:9200/_cluster/health?wait_for_status=green&timeout=1s'
+  restartPolicy: Never
+---
+# Source: devops-test/charts/elk/charts/es-master/templates/test/test-elasticsearch-health.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "devops-chart-njovs-test"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  containers:
+  - name: "devops-chart-uefme-test"
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.13.4"
+    imagePullPolicy: "IfNotPresent"
+    command:
+      - "sh"
+      - "-c"
+      - |
+        #!/usr/bin/env bash -e
+        curl -XGET --fail 'elasticsearch-master:9200/_cluster/health?wait_for_status=green&timeout=1s'
+  restartPolicy: Never

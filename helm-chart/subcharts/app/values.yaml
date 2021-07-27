@@ -1,0 +1,48 @@
+# Default values for mongo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicas: 1
+terminationGracePeriodSeconds: 10
+image:
+  registry: paulb314
+  name: uploader-app
+  tag: latest
+resources:
+  cpu: "0.5"
+  memory: 300Mi
+
+service:
+  port: 3000
+  replicas: 1
+  hostname: uploader.quelle-indignite.com
+  service:
+    name: uploader-app
+    port: 3000
+    ingressPort: 443
+    loadBalancerIP: "34.142.1.110"
+
+
+ports:
+  logstash: 31998
+
+volume:
+  accessMode: ReadWriteOnce
+  storageRequest: 5Gi
+  volumeMode: standard
+
+domain: quelle-indignite.com
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

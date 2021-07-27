@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+{{- with .Values.service }}
+  name: {{ $.Values.service.name }}
+  labels:
+    app: uploader
+  namespace: {{ $.Values.global.namespace}}
+spec:
+  replicas: {{ $.Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $.Values.service.name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Values.service.name }}
+{{- end }}
+    spec:
+      containers:
+      {{- with .Values.image }}
+      - image: "{{ $.Values.image.registry }}/{{ $.Values.image.name }}:{{ $.Values.image.tag }}"
+      {{- end }}
+        name: {{ .Values.service.name }}
+        command: ["yarn"]
+        args: ["start-prod"]
+        ports:
+          {{- with .Values.service }}
+          - containerPort: {{ $.Values.service.port  }}
+          {{- end }}
+        resources:
+          {{- with .Values.resources }}
+          limits:
+            {{- toYaml $.Values.resources | nindent 16 }}
+          requests:
+            {{- toYaml $.Values.resources | nindent 16 }}
+          {{- end}}
+        volumeMounts:
+          - name: uploaded
+            mountPath: /usr/app/src/uploaded
+        envFrom:
+        - secretRef:
+            name: mongo-secret
+
+      volumes:
+        - name: uploaded
+          persistentVolumeClaim:
+            claimName: uploads-claim
+
+
+

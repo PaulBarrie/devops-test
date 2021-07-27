@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-uploader-app
+  namespace: {{ .Values.global.namespace}}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.regional-static-ip-name: {{.Values.ingress.global_static_ip_name}}
+    # cert-manager.io/issuer: "cert-issuer"
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/issue-temporary-certificate: "true"
+spec:
+  # tls:
+  # - hosts:
+  #   - {{ .Values.global.hostname }}
+  #   secretName: certificate-tls
+  rules: 
+    - host: {{ .Values.global.hostname }}
+      http:
+        paths:
+        - path: /*  
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Values.app.service.name }}
+              port:
+                number: {{ .Values.app.service.port }}
+
+
+
+
+# - host: "{{ .Values.eck.kibana.service.name}}.{{ .Values.global.hostname }}"
+#   http:
+#     paths:
+#     - path: /*
+#       pathType: Prefix
+#       backend:
+#         service:
+#           {{- with .Values.eck.kibana.service }}
+#           name: {{ $.Values.eck.kibana.service.name }}
+#           port: 
+#             number: {{ $.Values.eck.kibana.service.port }}
+#           {{- end}}

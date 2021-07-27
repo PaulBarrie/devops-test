@@ -6,12 +6,12 @@ type: application
 version: 0.1.0
 appVersion: 1.16.0
 dependencies:
-- name: uploader-app
-  repository: file://subcharts/uploader-app
+- name: app
+  repository: file://subcharts/app
   version: 0.1.0
 - name: mongo
   repository: file://subcharts/mongo
   version: 0.1.0
-- name: eck
-  repository: file://subcharts/eck
+- name: elk
+  repository: file://subcharts/elk
   version: 0.1.0
