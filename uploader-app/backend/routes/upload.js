@@ -6,7 +6,7 @@ var fs = require('fs');
 var uuidv1 = require('uuid/v1');
 var config = require('config');
 var multer  = require('multer');
-var upload  = multer({dest: config.upload.tmp_path});
+var upload  = multer({dest: "/tmp/upload"});
 var router = express.Router();
 
 var UploadedFile = require('../model').UploadedFile;
@@ -57,7 +57,7 @@ router.get('/', function(req, res, next) {
 router.post('/upload', upload.array('files', 10), function(req, res, next) {
     var promises = [];
     for (var f of req.files) {
-        promises.push(saveFile(f, config.upload.storage_path));
+        promises.push(saveFile(f, "/usr/src/app/uploaded"));
     }
     
     Promise.all(promises)

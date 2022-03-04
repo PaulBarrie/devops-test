@@ -1,10 +1,10 @@
 'use strict';
 
 var path = require('path');
-var config = require('config');
+// var config = require('config');
 var helpers = require('./helpers');
-config.upload.tmp_path = helpers.checkPath(config.upload.tmp_path, '/tmp/uploader');
-config.upload.storage_path = helpers.checkPath(config.upload.storage_path, path.join(process.cwd(), 'uploaded'));
+// config.upload.tmp_path = helpers.checkPath(config.upload.tmp_path, '/tmp/uploader');
+// config.upload.storage_path = helpers.checkPath(config.upload.storage_path, path.join(process.cwd(), 'uploaded'));
 
 var express = require('express');
 var favicon = require('serve-favicon');
@@ -30,7 +30,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 var sess = {
-  secret: config.session.secret,
+  secret: "zdncjbcdjhedkjdehj",
   cookie: {maxAge: 60000},
   resave: true,
   saveUninitialized: true

@@ -8,7 +8,8 @@ const userMongo = process.env.MONGO_INITDB_ROOT_USERNAME;
 const authMongo = process.env.AUTH_PART_MONGO;
 const passMongo = process.env.MONGO_INITDB_ROOT_PASSWORD;
 const dbMongo = process.env.MONGO_INITDB_DATABASE;
-const host = (process.env.MONGO_HOST != null) ? process.env.MONGO_HOST : config.mongo.host;
+const dbPort = process.env.DB_PORT;
+const host =  process.env.MONGO_HOST;
 
 var createMongoUri = function(config) {
     var uri = '',

@@ -33,7 +33,7 @@ help: ## display commands help
 
 up: ## Start all components
 	echo "Start all components"
-	docker-compose up -d
+	docker-compose up -d --build
 .PHONY: up
 
 ps: ## Start all components
